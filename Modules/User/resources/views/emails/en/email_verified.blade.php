@@ -64,13 +64,11 @@
     <div class="container">
         <h1>Hi {{ $user->getUserDefaultProfile()->full_name }},</h1>
 
-        <p>Thanks for joining {{ $appName}} 🌟 To get started, please verify your account by clicking the link below:</p>
+        <p>Welcome to {{ $appName}}</p>
 
-        <a href="{{ $url }}" class="button">Verify Now</a>
+        <p>Your account is successfully verified.</p>
 
-        <p>If the button doesn't work, click the following link or copy-paste it into your browser:</p>
-
-        <div class="url-container"><a href="{{ $url }}">{{ $url }}</a></div>
+        {{-- <div class="url-container"><a href="{{ $url }}">{{ $url }}</a></div> --}}
 
         <p>Questions or concerns? We're here to help at <a href="mailto:{{ $appSupportEmail }}">{{ $appSupportEmail }}</a></p>
 

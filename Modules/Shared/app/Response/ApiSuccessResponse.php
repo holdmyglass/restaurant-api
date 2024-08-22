@@ -4,17 +4,20 @@ namespace Modules\Shared\Response;
 
 class ApiSuccessResponse implements ApiResponseInterface
 {
-    private $data;
+    private readonly ?array $data;
 
-    private $message;
+    private readonly string $message;
 
-    private $status;
+    private readonly string $status;
 
-    public function __construct($data = null, $message = null, $status = 200)
+    private readonly int $statusCode;
+
+    public function __construct(?array $data = null, ?string $message = null, string $status = 'success', int $statusCode = 200)
     {
         $this->data = $data;
         $this->message = $message;
         $this->status = $status;
+        $this->statusCode = $statusCode;
     }
 
     public function getData()
@@ -32,12 +35,17 @@ class ApiSuccessResponse implements ApiResponseInterface
         return $this->status;
     }
 
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
+
     public function toJson()
     {
-        return [
-            'data' => $this->data,
-            'message' => $this->message,
-            'status' => $this->status,
-        ];
+        return response()->json([
+            'data' => $this->getData(),
+            'message' => $this->getMessage(),
+            'status' => $this->getStatus(),
+        ], $this->getStatusCode());
     }
 }

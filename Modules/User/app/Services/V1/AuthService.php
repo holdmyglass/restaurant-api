@@ -2,13 +2,20 @@
 
 namespace Modules\User\Services\V1;
 
+use Modules\Shared\Enums\TokenableTypeEnum;
+use Modules\Shared\Enums\TokenScopeEnum;
+use Modules\Shared\Interfaces\V1\TokenRepositoryInterface;
 use Modules\Shared\Services\V1\AppService;
+use Modules\Shared\Services\V1\SystemService;
 use Modules\Shared\Services\V1\TokenService;
 use Modules\User\DTO\V1\ProfileDTO;
 use Modules\User\DTO\V1\UserDTO;
 use Modules\User\Enums\ProfileTypeEnum;
+use Modules\User\Enums\RegisterOptionEnum;
 use Modules\User\Events\V1\EmailVerificationCodeGenerated;
+use Modules\User\Events\V1\EmailVerified;
 use Modules\User\Events\V1\PhoneVerificationCodeGenerated;
+use Modules\User\Http\Requests\V1\Auth\AccountVerifyRequest;
 use Modules\User\Http\Requests\V1\Auth\RegisterRequest;
 use Modules\User\Interfaces\V1\AuthRepositoryInterface;
 use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
@@ -21,7 +28,9 @@ class AuthService
         private readonly ProfileRepositoryInterface $profileRepository,
         private readonly ProfileService $profileService,
         private readonly TokenService $tokenService,
-        private readonly AppService $appService
+        private readonly AppService $appService,
+        private readonly TokenRepositoryInterface $tokenRepository,
+        private readonly SystemService $systemService
     ) {}
 
     public function register(RegisterRequest $request): User
@@ -54,15 +63,150 @@ class AuthService
             $this->profileService->saveCoverImage($request->coverImg, $profile);
         }
 
-        if ($request->identity == 'EMAIL') {
-            $token = $this->tokenService->generateEmailVerificationCode($user->id);
-            event(new EmailVerificationCodeGenerated($user, $token, $this->appService));
-        }
-        if ($request->identity == 'PHONE') {
-            $token = $this->tokenService->generatePhoneVerificationCode($user->id);
-            event(new PhoneVerificationCodeGenerated($user, $token, $this->appService));
-        }
+        $token = match ($request->identity) {
+            RegisterOptionEnum::EMAIL->value => $this->tokenService->generateEmailVerificationCode($user->id),
+            RegisterOptionEnum::PHONE->value => $this->tokenService->generatePhoneVerificationCode($user->id),
+        };
+
+        $eventClass = match ($request->identity) {
+            RegisterOptionEnum::EMAIL->value => EmailVerificationCodeGenerated::class,
+            RegisterOptionEnum::PHONE->value => PhoneVerificationCodeGenerated::class,
+        };
+
+        event(new $eventClass($user, $token, $this->appService));
 
         return $user;
+    }
+
+    public function verifyAccount(AccountVerifyRequest $request): ?array
+    {
+        if ($request->identity == RegisterOptionEnum::EMAIL->value) {
+            return $this->verifyEmail($request);
+        }
+
+        if ($request->identity == RegisterOptionEnum::PHONE->value) {
+            return $this->verifyPhone($request);
+        }
+
+    }
+
+    private function verifyEmail(AccountVerifyRequest $request): array
+    {
+
+        $user = User::where('email', $request->email)->first();
+
+        if (! $user) {
+            return
+                [
+                    'status_code' => 404,
+                    'status' => 'error',
+                    'message' => __('user::messages.verify.email_not_registered'),
+                ];
+        }
+
+        if ($user->email_verified_at) {
+            return [
+                'status_code' => 200,
+                'status' => 'success',
+                'message' => __('user::messages.verify.email_already_verified'),
+            ];
+        }
+
+        $exist = $this->tokenRepository->tokenExist(TokenableTypeEnum::USER->value, $user->id, $request->token, TokenScopeEnum::VERIFY_EMAIL->value);
+
+        if (! $exist) {
+            return [
+                'status_code' => 404,
+                'status' => 'error',
+                'message' => __('shared::messages.request.400'),
+            ];
+        }
+
+        $expired = $this->tokenRepository->isTokenExpired($exist['token']);
+
+        if ($expired) {
+            return [
+                'status_code' => 403,
+                'status' => 'error',
+                'message' => __('user::messages.verify.token_expired'),
+            ];
+        }
+
+        $used = $this->tokenRepository->isTokenUsed($exist['token']);
+
+        if ($used) {
+            return [
+                'status_code' => 403,
+                'status' => 'error',
+                'message' => __('user::messages.verify.token_used'),
+            ];
+        }
+
+        $user = $this->authrepository->verifyEmail($user);
+
+        $this->tokenRepository->deleteToken($exist['token'], $this->systemService->getSystemId());
+
+        event(new EmailVerified($user, $this->appService));
+
+        return [
+            'status_code' => 200,
+            'status' => 'success',
+            'message' => __('user::messages.verify.email_verified'),
+        ];
+
+    }
+
+    private function verifyPhone(AccountVerifyRequest $request): array
+    {
+
+        $user = User::where('email', $request->phone)->first();
+
+        if (! $user) {
+            return
+                [
+                    'status' => 'success',
+                    'message' => __('user::messages.verify.phone_not_registered'),
+                ];
+        }
+
+        $exist = $this->tokenRepository->tokenExist(TokenableTypeEnum::USER->value, $user->id, $request->token, TokenScopeEnum::VERIFY_EMAIL->value);
+
+        if (! $exist) {
+            return [
+                'status' => 400,
+                'message' => __('shared::messages.request.400'),
+            ];
+        }
+
+        $expired = $this->tokenRepository->isTokenExpired($exist['token']);
+
+        if ($expired) {
+            return [
+                'status' => 401,
+                'message' => __('user::messages.verify.token_expired'),
+            ];
+        }
+
+        $used = $this->tokenRepository->isTokenUsed($exist['token']);
+
+        if ($used) {
+            return [
+                'status' => 'error',
+                'message' => __('user::messages.verify.token_used'),
+            ];
+        }
+
+        $user = $this->authrepository->verifyPhone($user);
+
+        $this->tokenRepository->deleteToken($exist['token'], $this->systemService->getSystemId());
+
+        return response()->json(
+            [
+                'status' => 'success',
+                'message' => __('user::messages.verify.phone_verified'),
+            ],
+            200
+        );
+
     }
 }

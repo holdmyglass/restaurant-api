@@ -19,6 +19,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware('guest')->group(function () {
 
         Route::post('auth/register', [RegisterController::class, 'register'])->name('register');
+
+        Route::post('auth/verify-account', [RegisterController::class, 'verifyAccount'])->name('verify.account');
     });
 
     // Route::middleware(['auth:api', 'auth.profile'])->group(function () {

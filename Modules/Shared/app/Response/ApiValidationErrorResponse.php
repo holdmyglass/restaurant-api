@@ -4,14 +4,17 @@ namespace Modules\Shared\Response;
 
 class ApiValidationErrorResponse implements ApiResponseInterface
 {
-    private $errors;
+    private readonly ?array $errors;
 
-    private $status;
+    private readonly string $status;
 
-    public function __construct($errors, $status = 422)
+    private readonly int $statusCode;
+
+    public function __construct(?array $errors = null, string $status = 'success', int $statusCode = 200)
     {
         $this->errors = $errors;
         $this->status = $status;
+        $this->statusCode = $statusCode;
     }
 
     public function getData()
@@ -34,12 +37,16 @@ class ApiValidationErrorResponse implements ApiResponseInterface
         return $this->errors;
     }
 
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
+
     public function toJson()
     {
-        return [
-            'message' => $this->getMessage(),
+        return response()->json([
             'status' => $this->getStatus(),
-            'errors' => $this->errors,
-        ];
+            'errors' => $this->getErrors(),
+        ], $this->getStatusCode());
     }
 }

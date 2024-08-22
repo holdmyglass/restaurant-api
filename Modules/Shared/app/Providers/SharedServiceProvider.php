@@ -4,6 +4,8 @@ namespace Modules\Shared\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\Shared\Interfaces\V1\TokenRepositoryInterface;
+use Modules\Shared\Repositories\V1\TokenRepository;
 
 class SharedServiceProvider extends ServiceProvider
 {
@@ -31,6 +33,7 @@ class SharedServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+        $this->binRepositories();
     }
 
     /**
@@ -116,5 +119,10 @@ class SharedServiceProvider extends ServiceProvider
         }
 
         return $paths;
+    }
+
+    private function binRepositories(): void
+    {
+        $this->app->bind(TokenRepositoryInterface::class, TokenRepository::class);
     }
 }

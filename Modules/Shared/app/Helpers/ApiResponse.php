@@ -8,18 +8,18 @@ use Modules\Shared\Response\ApiValidationErrorResponse;
 
 class ApiResponse
 {
-    public static function success($data = null, $message = null, $status = 200): ApiSuccessResponse
+    public static function success(?array $data = null, ?string $message = null, string $status = 'success', int $statusCode = 200): ApiSuccessResponse
     {
-        return new ApiSuccessResponse($data, $message, $status);
+        return new ApiSuccessResponse($data, $message, $status, $statusCode);
     }
 
-    public static function error($message = null, $status = 400): ApiErrorResponse
+    public static function error(?string $message = null, string $status = 'error', int $statusCode = 400): ApiErrorResponse
     {
-        return new ApiErrorResponse($message, $status);
+        return new ApiErrorResponse($message, $status, $statusCode);
     }
 
-    public static function validationError($errors, $status = 422): ApiValidationErrorResponse
+    public static function validationError(array $errors = [], string $status = 'error', int $statusCode = 422): ApiValidationErrorResponse
     {
-        return new ApiValidationErrorResponse($errors, $status);
+        return new ApiValidationErrorResponse($errors, $status, $statusCode);
     }
 }

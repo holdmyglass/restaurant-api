@@ -19,7 +19,7 @@ class RegisterRequest extends FormRequest
             'identity' => [
                 'required',
                 Rule::enum(RegisterOptionEnum::class),
-            ], // email or phone
+            ],
             'full_name' => [
                 'required',
             ],

@@ -8,10 +8,13 @@ class ApiErrorResponse implements ApiResponseInterface
 
     private $status;
 
-    public function __construct($message = null, $status = 400)
+    private $statusCode;
+
+    public function __construct(?string $message = null, string $status = 'error', int $statusCode = 400)
     {
         $this->message = $message;
         $this->status = $status;
+        $this->statusCode = $statusCode;
     }
 
     public function getData()
@@ -29,11 +32,16 @@ class ApiErrorResponse implements ApiResponseInterface
         return $this->status;
     }
 
+    public function getStatusCode()
+    {
+        return $this->statusCode;
+    }
+
     public function toJson()
     {
-        return [
-            'message' => $this->message,
-            'status' => $this->status,
-        ];
+        return response()->json([
+            'message' => $this->getMessage(),
+            'status' => $this->getStatus(),
+        ], $this->getStatusCode());
     }
 }

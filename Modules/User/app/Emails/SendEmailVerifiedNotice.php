@@ -8,13 +8,11 @@ use Illuminate\Queue\SerializesModels;
 use Modules\Shared\Services\V1\AppService;
 use Modules\User\Models\User;
 
-class SendEmailVerificationCode extends Mailable
+class SendEmailVerifiedNotice extends Mailable
 {
     use Queueable, SerializesModels;
 
     public User $user;
-
-    public string $token;
 
     public string $appName;
 
@@ -25,10 +23,9 @@ class SendEmailVerificationCode extends Mailable
     /**
      * Create a new message instance.
      */
-    public function __construct(User $user, string $token, AppService $appService)
+    public function __construct(User $user, AppService $appService)
     {
         $this->user = $user;
-        $this->token = $token;
         $this->appName = $appService->getName();
         $this->appSupportEmail = $appService->getSupportEmail();
         $this->appSupportPhone = $appService->getSupportEmail();
@@ -41,6 +38,6 @@ class SendEmailVerificationCode extends Mailable
     {
         $locale = app()->getLocale() ?? app()->getFallbackLocale();
 
-        return $this->subject(__('user::messages.email.subject_email_verification_code'))->view("user::emails.{$locale}.send_email_verification_code");
+        return $this->subject(__('user::messages.email.subject_email_verified'))->view("user::emails.{$locale}.email_verified");
     }
 }
