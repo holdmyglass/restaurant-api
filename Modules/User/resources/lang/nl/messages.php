@@ -19,7 +19,7 @@ return [
     ],
     'verify' => [
         'identity_required' => 'Gelieve aan te geven of u zich hebt geregistreerd met uw e-mailadres of telefoonnummer.',
-        'identity_enum' => "U moet kiezen tussen 'Email' of 'Phone' om verder te gaan met de verificatie.",
+        'identity_enum' => "U moet kiezen tussen 'EMAIL' of 'PHONE' om verder te gaan met de verificatie.",
         'email_required' => 'Kom op, jouw e-mailadres?',
         'email_email' => 'Geef een geldig e-mailadres op.',
         'phone_required' => 'Geef uw phone nummer.',
@@ -41,5 +41,21 @@ return [
         'subject_email_verification_link' => 'Verifieer uw Account',
         'subject_email_verified' => 'Account succesvol geverifieerd',
         'subject_password_reset_code' => 'Wachtwoord Reset',
+    ],
+    'login' => [
+        'identity_required' => 'Hoe zou je willen login?',
+        'identity_enum' => 'Loginopties zijn beperkt tot EMAIL of PHONE.',
+        'email_required' => 'E-mailadres nodig!',
+        'email_email' => 'Oeps, dat is geen geldig e-mailadres.',
+        'phone_required' => 'Geef uw phone nummer.',
+        'password_required' => 'Wachtwoord verplicht!',
+        'invalid_credentials' => 'Helaas! Ongeldige inloggegevens.',
+        'email_not_verified' => 'Wacht even! Verifieer je e-mailadres om door te gaan.',
+        'phone_not_verified' => 'Wacht even! Verifieer je phone nummer om door te gaan.',
+        'success' => 'Login succesvol',
+    ],
+    'logout' => [
+        'success' => 'Succesvol uitgelogd.',
+        'all_success' => 'Succesvol uitgelogd vanaf alle apparaten.',
     ],
 ];

@@ -2,6 +2,8 @@
 
 namespace Modules\User\Services\V1;
 
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Modules\Shared\Enums\TokenableTypeEnum;
 use Modules\Shared\Enums\TokenScopeEnum;
 use Modules\Shared\Interfaces\V1\TokenRepositoryInterface;
@@ -16,6 +18,7 @@ use Modules\User\Events\V1\EmailVerificationCodeGenerated;
 use Modules\User\Events\V1\EmailVerified;
 use Modules\User\Events\V1\PhoneVerificationCodeGenerated;
 use Modules\User\Http\Requests\V1\Auth\AccountVerifyRequest;
+use Modules\User\Http\Requests\V1\Auth\LoginRequest;
 use Modules\User\Http\Requests\V1\Auth\RegisterRequest;
 use Modules\User\Interfaces\V1\AuthRepositoryInterface;
 use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
@@ -33,7 +36,7 @@ class AuthService
         private readonly SystemService $systemService
     ) {}
 
-    public function register(RegisterRequest $request): User
+    public function register(RegisterRequest $request): array
     {
 
         $userDTO = new UserDTO(
@@ -75,10 +78,15 @@ class AuthService
 
         event(new $eventClass($user, $token, $this->appService));
 
-        return $user;
+        return [
+            'status_code' => 201,
+            'status' => 'success',
+            'message' => __('user::messages.register.success'),
+            'data' => null,
+        ];
     }
 
-    public function verifyAccount(AccountVerifyRequest $request): ?array
+    public function verifyAccount(AccountVerifyRequest $request): array
     {
         if ($request->identity == RegisterOptionEnum::EMAIL->value) {
             return $this->verifyEmail($request);
@@ -87,6 +95,8 @@ class AuthService
         if ($request->identity == RegisterOptionEnum::PHONE->value) {
             return $this->verifyPhone($request);
         }
+
+        return [];
 
     }
 
@@ -98,6 +108,7 @@ class AuthService
         if (! $user) {
             return
                 [
+                    'data' => null,
                     'status_code' => 404,
                     'status' => 'error',
                     'message' => __('user::messages.verify.email_not_registered'),
@@ -106,6 +117,7 @@ class AuthService
 
         if ($user->email_verified_at) {
             return [
+                'data' => null,
                 'status_code' => 200,
                 'status' => 'success',
                 'message' => __('user::messages.verify.email_already_verified'),
@@ -116,6 +128,7 @@ class AuthService
 
         if (! $exist) {
             return [
+                'data' => null,
                 'status_code' => 404,
                 'status' => 'error',
                 'message' => __('shared::messages.request.400'),
@@ -126,6 +139,7 @@ class AuthService
 
         if ($expired) {
             return [
+                'data' => null,
                 'status_code' => 403,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_expired'),
@@ -136,6 +150,7 @@ class AuthService
 
         if ($used) {
             return [
+                'data' => null,
                 'status_code' => 403,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_used'),
@@ -149,6 +164,7 @@ class AuthService
         event(new EmailVerified($user, $this->appService));
 
         return [
+            'data' => null,
             'status_code' => 200,
             'status' => 'success',
             'message' => __('user::messages.verify.email_verified'),
@@ -164,26 +180,30 @@ class AuthService
         if (! $user) {
             return
                 [
-                    'status' => 'success',
+                    'data' => null,
+                    'status_code' => 404,
+                    'status' => 'error',
                     'message' => __('user::messages.verify.phone_not_registered'),
                 ];
+        }
+
+        if ($user->email_verified_at) {
+            return [
+                'data' => null,
+                'status_code' => 200,
+                'status' => 'success',
+                'message' => __('user::messages.verify.phone_already_verified'),
+            ];
         }
 
         $exist = $this->tokenRepository->tokenExist(TokenableTypeEnum::USER->value, $user->id, $request->token, TokenScopeEnum::VERIFY_EMAIL->value);
 
         if (! $exist) {
             return [
-                'status' => 400,
+                'data' => null,
+                'status_code' => 404,
+                'status' => 'error',
                 'message' => __('shared::messages.request.400'),
-            ];
-        }
-
-        $expired = $this->tokenRepository->isTokenExpired($exist['token']);
-
-        if ($expired) {
-            return [
-                'status' => 401,
-                'message' => __('user::messages.verify.token_expired'),
             ];
         }
 
@@ -191,6 +211,8 @@ class AuthService
 
         if ($used) {
             return [
+                'data' => null,
+                'status_code' => 403,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_used'),
             ];
@@ -200,13 +222,131 @@ class AuthService
 
         $this->tokenRepository->deleteToken($exist['token'], $this->systemService->getSystemId());
 
-        return response()->json(
-            [
-                'status' => 'success',
-                'message' => __('user::messages.verify.phone_verified'),
-            ],
-            200
-        );
+        // event(new PhoneVerified($user, $this->appService));
 
+        return [
+            'data' => null,
+            'status_code' => 200,
+            'status' => 'success',
+            'message' => __('user::messages.verify.phone_verified'),
+        ];
+
+    }
+
+    public function login(LoginRequest $request): array
+    {
+        if ($request->identity == RegisterOptionEnum::EMAIL->value) {
+            $credentials = $request->only('email', 'password');
+
+            if (Auth::attempt($credentials, $request->remember)) {
+
+                /** @var User $user */
+                $user = Auth::user();
+
+                if (! $user->email_verified_at) {
+                    return
+                       [
+                           'data' => null,
+                           'status_code' => 403,
+                           'status' => 'error',
+                           'message' => __('user::messages.login.email_not_verified'),
+                       ];
+                }
+
+                $token = $this->profileService->assignTokenToUserAndProfile($user);
+
+                return
+                [
+                    'data' => [
+                        'user' => $user,
+                        'token' => $token->accessToken,
+                    ],
+                    'status_code' => 200,
+                    'status' => 'success',
+                    'message' => __('user::messages.login.success'),
+                ];
+            } else {
+                return
+                    [
+                        'data' => null,
+                        'status_code' => 401,
+                        'status' => 'error',
+                        'message' => __('user::messages.login.invalid_credentials'),
+                    ];
+            }
+        }
+
+        if ($request->identity == RegisterOptionEnum::PHONE->value) {
+            $credentials = $request->only('phone', 'password');
+            if (Auth::attempt($credentials, $request->remember)) {
+
+                /** @var User $user */
+                $user = Auth::user();
+
+                if (! $user->phone_verified_at) {
+                    return
+                       [
+                           'data' => null,
+                           'status_code' => 403,
+                           'status' => 'error',
+                           'message' => __('user::messages.login.phone_not_verified'),
+                       ];
+                }
+
+                $token = $this->profileService->assignTokenToUserAndProfile($user);
+
+                return
+                [
+                    'data' => [
+                        'user' => $user,
+                        'token' => $token,
+                    ],
+                    'status_code' => 200,
+                    'status' => 'success',
+                    'message' => __('user::messages.login.success'),
+                ];
+
+            } else {
+                return
+                    [
+                        'data' => null,
+                        'status_code' => 401,
+                        'status' => 'error',
+                        'message' => __('user::messages.login.invalid_credentials'),
+                    ];
+            }
+        }
+
+        return [];
+    }
+
+    public function logout(Request $request): array
+    {
+        $user = Auth::user();
+        $user->token()->revoke();
+
+        return
+        [
+            'data' => null,
+            'status_code' => 200,
+            'status' => 'success',
+            'message' => __('user::messages.logout.success'),
+        ];
+    }
+
+    public function logoutFromAllDevice(Request $request): array
+    {
+        $user = Auth::user();
+        $user->tokens->each(function ($token, $key) {
+            $token->revoke();
+        });
+
+        return
+        [
+            'data' => null,
+            'status_code' => 200,
+            'status' => 'success',
+            'message' => __('user::messages.logout.all_success'),
+        ];
     }
 }

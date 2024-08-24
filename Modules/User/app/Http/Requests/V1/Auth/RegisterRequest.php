@@ -30,7 +30,6 @@ class RegisterRequest extends FormRequest
             ],
             'phone' => [
                 'required_if:identity,'.RegisterOptionEnum::PHONE->value,
-                'email',
                 'unique:users',
             ],
             'password' => [

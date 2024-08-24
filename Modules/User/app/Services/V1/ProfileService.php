@@ -5,15 +5,21 @@ namespace Modules\User\Services\V1;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Intervention\Image\Laravel\Facades\Image;
+use Laravel\Passport\PersonalAccessTokenResult;
 use Modules\User\DTO\V1\ProfileDTO;
 use Modules\User\DTO\V1\ProfileImageDTO;
+use Modules\User\DTO\V1\ProfileTokenDTO;
+use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
+use Modules\User\Interfaces\V1\ProfileTokenRepositoryInterface;
 use Modules\User\Models\Profile;
-use Modules\User\Repositories\V1\ProfileRepository;
+use Modules\User\Models\ProfileToken;
+use Modules\User\Models\User;
 
 class ProfileService
 {
     public function __construct(
-        private readonly ProfileRepository $profileRepository
+        private readonly ProfileRepositoryInterface $profileRepository,
+        private readonly ProfileTokenRepositoryInterface $profileTokenRepository
     ) {}
 
     public function createProfile(ProfileDTO $profileDto): Profile
@@ -103,5 +109,35 @@ class ProfileService
         $this->profileRepository->updateCoverImage($profile, $profileImageDto);
 
         return $profile;
+    }
+
+    public function assignTokenToUserAndProfile(User $user, ?Profile $profile = null): PersonalAccessTokenResult
+    {
+        if (! $profile) {
+            $profile = $user->getUserDefaultProfile();
+        }
+
+        // Create a new personal access token for the user
+        $tokenResult = $user->createToken('ProfileToken');
+
+        $profileTokenDto = new ProfileTokenDTO(
+            profileId: $profile->id,
+            accessToken: $tokenResult->accessToken
+        );
+
+        $this->profileTokenRepository->createProfileToken($profileTokenDto);
+
+        return $tokenResult;
+    }
+
+    public function getAuthenticatedProfileFromToken($token): ?Profile
+    {
+        $tokenRecord = ProfileToken::where('access_token', $token)->first();
+
+        if ($tokenRecord) {
+            return $tokenRecord->profile;
+        }
+
+        return null;
     }
 }

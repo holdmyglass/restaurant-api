@@ -1,6 +1,9 @@
 <?php
 
+use App\Http\Middleware\AuthenticateProfile;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use Modules\User\Http\Controllers\Api\V1\Auth\LoginController;
 use Modules\User\Http\Controllers\Api\V1\Auth\RegisterController;
 
 /*
@@ -14,23 +17,31 @@ use Modules\User\Http\Controllers\Api\V1\Auth\RegisterController;
 |
 */
 
-Route::prefix('v1')->group(function () {
+Route::prefix('v1/auth')->group(function () {
 
     Route::middleware('guest')->group(function () {
 
-        Route::post('auth/register', [RegisterController::class, 'register'])->name('register');
+        Route::post('register', [RegisterController::class, 'register'])->name('register');
 
-        Route::post('auth/verify-account', [RegisterController::class, 'verifyAccount'])->name('verify.account');
+        Route::post('verify-account', [RegisterController::class, 'verifyAccount'])->name('verify.account');
+
+        Route::post('login', [LoginController::class, 'login'])->name('login');
     });
 
-    // Route::middleware(['auth:api', 'auth.profile'])->group(function () {
+});
 
-    //     // Route::get('/user', function (Request $request) {
-    //     //     $authenticatedProfile = $request->input('authenticated_profile');
-    //     //     return $authenticatedProfile;
-    //     // });
+Route::prefix('v1')->group(function () {
 
-    //     // Route::post('auth/logout', [LoginController::class, 'logout'])->name('logout');
-    //     // Route::post('auth/logout-from-all-device', [LoginController::class, 'logoutFromAllDevice'])->name('logout.from.all.device');
-    // });
+    Route::middleware(['auth:api', AuthenticateProfile::class])->group(function () {
+
+        Route::get('user', function (Request $request) {
+
+            $current_profile = $request->input('profile');
+
+            return response()->json($current_profile);
+        });
+
+        Route::post('auth/logout', [LoginController::class, 'logout'])->name('logout');
+        Route::post('auth/logout-from-all-device', [LoginController::class, 'logoutFromAllDevice'])->name('logout.from.all.device');
+    });
 });

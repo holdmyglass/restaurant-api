@@ -4,6 +4,8 @@ namespace Modules\User\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Shared\Models\Observers\BlamableTrait;
 
@@ -49,5 +51,15 @@ class Profile extends Model
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
         ];
+    }
+
+    public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function tokens(): HasMany
+    {
+        return $this->hasMany(ProfileToken::class, 'profile_id');
     }
 }

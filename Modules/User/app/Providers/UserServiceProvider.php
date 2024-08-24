@@ -6,8 +6,10 @@ use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Modules\User\Interfaces\V1\AuthRepositoryInterface;
 use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
+use Modules\User\Interfaces\V1\ProfileTokenRepositoryInterface;
 use Modules\User\Repositories\V1\AuthRepository;
 use Modules\User\Repositories\V1\ProfileRepository;
+use Modules\User\Repositories\V1\ProfileTokenRepository;
 
 class UserServiceProvider extends ServiceProvider
 {
@@ -127,5 +129,6 @@ class UserServiceProvider extends ServiceProvider
     {
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
         $this->app->bind(ProfileRepositoryInterface::class, ProfileRepository::class);
+        $this->app->bind(ProfileTokenRepositoryInterface::class, ProfileTokenRepository::class);
     }
 }
