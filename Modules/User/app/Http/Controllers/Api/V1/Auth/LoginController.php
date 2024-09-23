@@ -38,11 +38,11 @@ final class LoginController extends Controller
     {
         try {
 
-        $res = $this->authService->logout($request);
+            $res = $this->authService->logout($request);
 
-        $response = ApiResponse::success($res['data'], $res['message'], $res['status'], $res['status_code']);
+            $response = ApiResponse::success($res['data'], $res['message'], $res['status'], $res['status_code']);
 
-        return $response->toJson();
+            return $response->toJson();
 
         } catch (\Throwable $th) {
             $response = ApiResponse::error(__('shared::messages.error.something_went_wrong'), 'error', 500);

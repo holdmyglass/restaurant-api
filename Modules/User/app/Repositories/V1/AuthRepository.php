@@ -38,7 +38,7 @@ class AuthRepository implements AuthRepositoryInterface
 
     public function verifyPhone(User $user): User
     {
-        // verify email
+        // verify phone
         $user->phone_verified_at = Carbon::now();
         $user->save();
 

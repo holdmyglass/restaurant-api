@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Shared\Models\Observers\BlamableTrait;
+use Modules\User\Enums\UserLevelEnum;
 
 class Profile extends Model
 {
@@ -27,6 +28,7 @@ class Profile extends Model
         'phone',
         'display_img',
         'cover_img',
+        'level',
     ];
 
     /**
@@ -50,6 +52,7 @@ class Profile extends Model
             'verified_at' => 'datetime',
             'email_verified_at' => 'datetime',
             'phone_verified_at' => 'datetime',
+            'level' => UserLevelEnum::class,
         ];
     }
 

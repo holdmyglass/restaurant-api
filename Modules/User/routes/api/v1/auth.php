@@ -34,6 +34,13 @@ Route::prefix('v1')->group(function () {
 
     Route::middleware(['auth:api', AuthenticateProfile::class])->group(function () {
 
+        Route::get('authenticate-token', function () {
+            return response()->json([
+                'status' => 'success',
+                'message' => 'valid token',
+            ], 201);
+        });
+
         Route::get('user', function (Request $request) {
 
             $current_profile = $request->input('profile');

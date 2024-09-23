@@ -4,6 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Modules\Shared\Models\Migrations\BlamableMigrationTrait;
+use Modules\User\Enums\UserLevelEnum;
 
 return new class extends Migration
 {
@@ -29,6 +30,9 @@ return new class extends Migration
             $table->timestamp('email_verified_at')->nullable();
             $table->timestamp('phone_verified_at')->nullable();
             $table->string('type');
+
+            // level [ system | admin | user ]
+            $table->string('level')->default(UserLevelEnum::USER);
 
             // Blamable
             $this->runBlamable($table);

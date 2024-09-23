@@ -23,6 +23,8 @@ use Modules\User\Http\Requests\V1\Auth\RegisterRequest;
 use Modules\User\Interfaces\V1\AuthRepositoryInterface;
 use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
 use Modules\User\Models\User;
+use Modules\User\Transformers\V1\Profile\LoggedInProfileResource;
+use Modules\User\Transformers\V1\Profile\ProfileResource;
 
 class AuthService
 {
@@ -255,16 +257,18 @@ class AuthService
 
                 $token = $this->profileService->assignTokenToUserAndProfile($user);
 
+                $profile = $this->profileService->getAuthenticatedProfileFromToken($token->accessToken);
+
                 return
                 [
                     'data' => [
-                        'user' => $user,
-                        'token' => $token->accessToken,
+                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),                    
                     ],
                     'status_code' => 200,
                     'status' => 'success',
                     'message' => __('user::messages.login.success'),
                 ];
+
             } else {
                 return
                     [
@@ -295,11 +299,12 @@ class AuthService
 
                 $token = $this->profileService->assignTokenToUserAndProfile($user);
 
+                $profile = $this->profileService->getAuthenticatedProfileFromToken($token);
+
                 return
                 [
                     'data' => [
-                        'user' => $user,
-                        'token' => $token,
+                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),                    
                     ],
                     'status_code' => 200,
                     'status' => 'success',
