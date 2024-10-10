@@ -16,5 +16,9 @@ return [
     ],
     'error' => [
         'something_went_wrong' => 'Excuses, er is een onverwachte fout opgetreden. Probeer het opnieuw.',
+        'model_not_found' => 'Model niet gevonden.',
+        'invalid_resource_identifier' => 'Ongeldige resource-identificatie',
+        'only_current_version_can_be_updated' => 'Alleen de huidige versie kan worden bijgewerkt.',
+        'only_current_version_can_be_deleted' => 'Alleen de huidige versie kan worden verwijderd',
     ],
 ];

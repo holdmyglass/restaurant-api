@@ -10,7 +10,7 @@ use Symfony\Component\HttpFoundation\Response;
 class AuthenticateProfile
 {
     public function __construct(
-        private ProfileService $profileService
+        private readonly ProfileService $profileService
     ) {}
 
     /**

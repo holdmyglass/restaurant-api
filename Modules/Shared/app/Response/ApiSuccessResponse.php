@@ -2,17 +2,19 @@
 
 namespace Modules\Shared\Response;
 
+use Modules\Shared\Enums\ServerStatusCodeEnum;
+
 class ApiSuccessResponse implements ApiResponseInterface
 {
     private readonly ?array $data;
 
-    private readonly string $message;
+    private readonly ?string $message;
 
     private readonly string $status;
 
-    private readonly int $statusCode;
+    private readonly ServerStatusCodeEnum $statusCode;
 
-    public function __construct(?array $data = null, ?string $message = null, string $status = 'success', int $statusCode = 200)
+    public function __construct(?array $data = null, ?string $message = null, string $status = 'success', ServerStatusCodeEnum $statusCode = ServerStatusCodeEnum::OK)
     {
         $this->data = $data;
         $this->message = $message;
@@ -46,6 +48,6 @@ class ApiSuccessResponse implements ApiResponseInterface
             'data' => $this->getData(),
             'message' => $this->getMessage(),
             'status' => $this->getStatus(),
-        ], $this->getStatusCode());
+        ], $this->getStatusCode()->value);
     }
 }

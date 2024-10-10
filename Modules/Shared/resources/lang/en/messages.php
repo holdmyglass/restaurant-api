@@ -16,5 +16,9 @@ return [
     ],
     'error' => [
         'something_went_wrong' => 'Apologies, an unexpected error occurred. Please try again.',
+        'model_not_found' => 'Model not found',
+        'invalid_resource_identifier' => 'Invalid resource identifier',
+        'only_current_version_can_be_updated' => 'Only the current version can be updated.',
+        'only_current_version_can_be_deleted' => 'Only the current version can be deleted.',
     ],
 ];

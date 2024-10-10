@@ -2,13 +2,16 @@
 
 namespace Modules\Shared\Services\V1;
 
+/**
+ * These data should be fetched from database for the specific tenant
+ */
 class AppService
 {
-    private $name = 'Article Inspire';
+    private $name = 'Sushi Merksem';
 
     private $frontend_url = 'http://localhost:3000';
 
-    private $supportEmail = 'help@articleinpire.com';
+    private $supportEmail = 'help@sushimerksem.be';
 
     private $supportPhone = '0032 484 63 01 51';
 

@@ -2,15 +2,17 @@
 
 namespace Modules\Shared\Response;
 
+use Modules\Shared\Enums\ServerStatusCodeEnum;
+
 class ApiErrorResponse implements ApiResponseInterface
 {
-    private $message;
+    private readonly ?string $message;
 
-    private $status;
+    private readonly string $status;
 
-    private $statusCode;
+    private readonly ServerStatusCodeEnum $statusCode;
 
-    public function __construct(?string $message = null, string $status = 'error', int $statusCode = 400)
+    public function __construct(?string $message = null, string $status = 'error', ServerStatusCodeEnum $statusCode = ServerStatusCodeEnum::BAD_REQUEST)
     {
         $this->message = $message;
         $this->status = $status;
@@ -42,6 +44,6 @@ class ApiErrorResponse implements ApiResponseInterface
         return response()->json([
             'message' => $this->getMessage(),
             'status' => $this->getStatus(),
-        ], $this->getStatusCode());
+        ], $this->getStatusCode()->value);
     }
 }

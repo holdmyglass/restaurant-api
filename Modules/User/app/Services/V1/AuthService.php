@@ -4,6 +4,7 @@ namespace Modules\User\Services\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Modules\Shared\Enums\ServerStatusCodeEnum;
 use Modules\Shared\Enums\TokenableTypeEnum;
 use Modules\Shared\Enums\TokenScopeEnum;
 use Modules\Shared\Interfaces\V1\TokenRepositoryInterface;
@@ -24,7 +25,6 @@ use Modules\User\Interfaces\V1\AuthRepositoryInterface;
 use Modules\User\Interfaces\V1\ProfileRepositoryInterface;
 use Modules\User\Models\User;
 use Modules\User\Transformers\V1\Profile\LoggedInProfileResource;
-use Modules\User\Transformers\V1\Profile\ProfileResource;
 
 class AuthService
 {
@@ -81,7 +81,7 @@ class AuthService
         event(new $eventClass($user, $token, $this->appService));
 
         return [
-            'status_code' => 201,
+            'status_code' => ServerStatusCodeEnum::CREATED,
             'status' => 'success',
             'message' => __('user::messages.register.success'),
             'data' => null,
@@ -111,7 +111,7 @@ class AuthService
             return
                 [
                     'data' => null,
-                    'status_code' => 404,
+                    'status_code' => ServerStatusCodeEnum::NOT_FOUND,
                     'status' => 'error',
                     'message' => __('user::messages.verify.email_not_registered'),
                 ];
@@ -120,7 +120,7 @@ class AuthService
         if ($user->email_verified_at) {
             return [
                 'data' => null,
-                'status_code' => 200,
+                'status_code' => ServerStatusCodeEnum::OK->value,
                 'status' => 'success',
                 'message' => __('user::messages.verify.email_already_verified'),
             ];
@@ -131,7 +131,7 @@ class AuthService
         if (! $exist) {
             return [
                 'data' => null,
-                'status_code' => 404,
+                'status_code' => ServerStatusCodeEnum::NOT_FOUND,
                 'status' => 'error',
                 'message' => __('shared::messages.request.400'),
             ];
@@ -142,7 +142,7 @@ class AuthService
         if ($expired) {
             return [
                 'data' => null,
-                'status_code' => 403,
+                'status_code' => ServerStatusCodeEnum::FORBIDDEN,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_expired'),
             ];
@@ -153,7 +153,7 @@ class AuthService
         if ($used) {
             return [
                 'data' => null,
-                'status_code' => 403,
+                'status_code' => ServerStatusCodeEnum::FORBIDDEN,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_used'),
             ];
@@ -167,7 +167,7 @@ class AuthService
 
         return [
             'data' => null,
-            'status_code' => 200,
+            'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
             'message' => __('user::messages.verify.email_verified'),
         ];
@@ -183,7 +183,7 @@ class AuthService
             return
                 [
                     'data' => null,
-                    'status_code' => 404,
+                    'status_code' => ServerStatusCodeEnum::NOT_FOUND,
                     'status' => 'error',
                     'message' => __('user::messages.verify.phone_not_registered'),
                 ];
@@ -192,7 +192,7 @@ class AuthService
         if ($user->email_verified_at) {
             return [
                 'data' => null,
-                'status_code' => 200,
+                'status_code' => ServerStatusCodeEnum::OK,
                 'status' => 'success',
                 'message' => __('user::messages.verify.phone_already_verified'),
             ];
@@ -203,7 +203,7 @@ class AuthService
         if (! $exist) {
             return [
                 'data' => null,
-                'status_code' => 404,
+                'status_code' => ServerStatusCodeEnum::NOT_FOUND,
                 'status' => 'error',
                 'message' => __('shared::messages.request.400'),
             ];
@@ -214,7 +214,7 @@ class AuthService
         if ($used) {
             return [
                 'data' => null,
-                'status_code' => 403,
+                'status_code' => ServerStatusCodeEnum::FORBIDDEN,
                 'status' => 'error',
                 'message' => __('user::messages.verify.token_used'),
             ];
@@ -228,7 +228,7 @@ class AuthService
 
         return [
             'data' => null,
-            'status_code' => 200,
+            'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
             'message' => __('user::messages.verify.phone_verified'),
         ];
@@ -249,7 +249,7 @@ class AuthService
                     return
                        [
                            'data' => null,
-                           'status_code' => 403,
+                           'status_code' => ServerStatusCodeEnum::FORBIDDEN,
                            'status' => 'error',
                            'message' => __('user::messages.login.email_not_verified'),
                        ];
@@ -262,9 +262,9 @@ class AuthService
                 return
                 [
                     'data' => [
-                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),                    
+                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),
                     ],
-                    'status_code' => 200,
+                    'status_code' => ServerStatusCodeEnum::OK,
                     'status' => 'success',
                     'message' => __('user::messages.login.success'),
                 ];
@@ -273,7 +273,7 @@ class AuthService
                 return
                     [
                         'data' => null,
-                        'status_code' => 401,
+                        'status_code' => ServerStatusCodeEnum::UNAUTHORIZED,
                         'status' => 'error',
                         'message' => __('user::messages.login.invalid_credentials'),
                     ];
@@ -291,7 +291,7 @@ class AuthService
                     return
                        [
                            'data' => null,
-                           'status_code' => 403,
+                           'status_code' => ServerStatusCodeEnum::FORBIDDEN,
                            'status' => 'error',
                            'message' => __('user::messages.login.phone_not_verified'),
                        ];
@@ -304,9 +304,9 @@ class AuthService
                 return
                 [
                     'data' => [
-                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),                    
+                        'profile' => new LoggedInProfileResource($profile, $token->accessToken),
                     ],
-                    'status_code' => 200,
+                    'status_code' => ServerStatusCodeEnum::OK,
                     'status' => 'success',
                     'message' => __('user::messages.login.success'),
                 ];
@@ -315,7 +315,7 @@ class AuthService
                 return
                     [
                         'data' => null,
-                        'status_code' => 401,
+                        'status_code' => ServerStatusCodeEnum::UNAUTHORIZED,
                         'status' => 'error',
                         'message' => __('user::messages.login.invalid_credentials'),
                     ];
@@ -333,7 +333,7 @@ class AuthService
         return
         [
             'data' => null,
-            'status_code' => 200,
+            'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
             'message' => __('user::messages.logout.success'),
         ];
@@ -349,7 +349,7 @@ class AuthService
         return
         [
             'data' => null,
-            'status_code' => 200,
+            'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
             'message' => __('user::messages.logout.all_success'),
         ];

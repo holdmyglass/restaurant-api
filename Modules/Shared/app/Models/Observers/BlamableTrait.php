@@ -9,6 +9,7 @@ trait BlamableTrait
 {
     protected static function bootBlamableTrait(): void
     {
+        // TODO: Need to use the Authenticated profile id insted of User id
         static::creating(function ($model) {
             $model->created_by = Auth::check() ? Auth::id() : (new SystemService)->getSystemId();
             $model->updated_by = Auth::check() ? Auth::id() : (new SystemService)->getSystemId();

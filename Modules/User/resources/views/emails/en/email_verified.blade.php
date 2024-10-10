@@ -72,7 +72,6 @@
 
         <p>Questions or concerns? We're here to help at <a href="mailto:{{ $appSupportEmail }}">{{ $appSupportEmail }}</a></p>
 
-        <p>Cheers to your blogging journey!</p>
 
         <p class="footer">Best,<br>The {{ $appName }} Team 🚀</p>
     </div>

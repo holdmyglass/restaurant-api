@@ -2,15 +2,17 @@
 
 namespace Modules\Shared\Response;
 
+use Modules\Shared\Enums\ServerStatusCodeEnum;
+
 class ApiValidationErrorResponse implements ApiResponseInterface
 {
     private readonly ?array $errors;
 
     private readonly string $status;
 
-    private readonly int $statusCode;
+    private readonly ServerStatusCodeEnum $statusCode;
 
-    public function __construct(?array $errors = null, string $status = 'success', int $statusCode = 200)
+    public function __construct(?array $errors = null, string $status = 'error', ServerStatusCodeEnum $statusCode = ServerStatusCodeEnum::UNPROCESSABLE_CONTENT)
     {
         $this->errors = $errors;
         $this->status = $status;
@@ -47,6 +49,6 @@ class ApiValidationErrorResponse implements ApiResponseInterface
         return response()->json([
             'status' => $this->getStatus(),
             'errors' => $this->getErrors(),
-        ], $this->getStatusCode());
+        ], $this->getStatusCode()->value);
     }
 }
