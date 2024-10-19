@@ -4,10 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 use Modules\Shared\Models\Migrations\BlamableMigrationTrait;
+use Modules\Shared\Models\Migrations\VersionableTraitMigration;
 
 return new class extends Migration
 {
-    use BlamableMigrationTrait;
+    use BlamableMigrationTrait, VersionableTraitMigration;
 
     /**
      * Run the migrations.
@@ -30,6 +31,9 @@ return new class extends Migration
 
             // Blamable
             $this->runBlamable($table);
+
+            // Versionable
+            $this->runVersionable($table);
 
             $table->timestamps();
             $table->softDeletes();

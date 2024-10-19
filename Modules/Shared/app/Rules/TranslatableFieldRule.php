@@ -23,47 +23,55 @@ class TranslatableFieldRule implements ValidationRule
         switch ($this->mode) {
             case 'all':
                 $missingLanguages = array_diff($languages, $languageKeys);
-
                 if (! empty($missingLanguages)) {
-                    $fail("{$attribute} must be present for all languages: [".implode(', ', $languages).']');
-
-                    return;
+                    $fail(__('shared::messages.rule.translatable_field_all', [
+                        'attribute' => $attribute,
+                        'languages' => implode(', ', $languages),
+                    ]));
                 }
                 break;
+
             case 'none':
                 if (! empty($languageKeys)) {
-                    $fail("{$attribute} must not be present for any language.");
-
-                    return;
+                    $fail(__('shared::messages.rule.translatable_field_none', [
+                        'attribute' => $attribute,
+                    ]));
                 }
                 break;
+
             case 'atLeast':
                 if (count($languageKeys) < $this->minCount) {
-                    $fail("{$attribute} must be present for at least {$this->minCount} languages.");
-
-                    return;
+                    $fail(__('shared::messages.rule.translatable_field_at_least', [
+                        'attribute' => $attribute,
+                        'minCount' => $this->minCount,
+                    ]));
                 }
                 break;
+
             case 'noneOrAll':
                 if (! empty($languageKeys) && count($languageKeys) !== count($languages)) {
-                    $fail("{$attribute} must be either present for all languages or not present for any language.");
-
-                    return;
+                    $fail(__('shared::messages.rule.translatable_field_none_or_all', [
+                        'attribute' => $attribute,
+                    ]));
                 }
                 break;
+
             case 'atLeastLocales':
                 $requiredLocales = $this->requiredLocales;
                 $localeKeys = array_keys($value);
                 $missingLocales = array_diff($requiredLocales, $localeKeys);
-
                 if (! empty($missingLocales)) {
-                    $fail("{$attribute} must be present for at least the following locales: ".implode(', ', $missingLocales));
-
-                    return;
+                    $fail(__('shared::messages.rule.translatable_field_at_least_locales', [
+                        'attribute' => $attribute,
+                        'locales' => implode(', ', $missingLocales),
+                    ]));
                 }
                 break;
+
             default:
-                throw new InvalidArgumentException("Invalid mode: {$this->mode}");
+                throw new InvalidArgumentException(__('shared::messages.rule.invalid_mode', [
+                    'mode' => $this->mode,
+                ]));
         }
     }
 }

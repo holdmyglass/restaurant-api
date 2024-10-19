@@ -23,6 +23,7 @@ return new class extends Migration
             $table->string('slug');
             $table->json('description')->nullable();
             $table->string('level')->default(value: ProductOptionTypeEnum::SUPPLEMENT);
+            $table->integer('rank');
 
             // availability
             $table->boolean('available')->default(true);

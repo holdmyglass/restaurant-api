@@ -13,4 +13,17 @@ class ProductCategoryDTO
         public int $rank,
         public ?string $type,
     ) {}
+
+    public function toArray(): array
+    {
+        return [
+            'parent_id' => $this->parentId,
+            'name' => $this->name,
+            'description' => $this->description,
+            'image' => $this->image,
+            'slug' => $this->slug,
+            'rank' => $this->rank,
+            'type' => $this->type,
+        ];
+    }
 }

@@ -10,12 +10,15 @@ use Modules\User\Interfaces\V1\ProfileTokenRepositoryInterface;
 use Modules\User\Repositories\V1\AuthRepository;
 use Modules\User\Repositories\V1\ProfileRepository;
 use Modules\User\Repositories\V1\ProfileTokenRepository;
+use Nwidart\Modules\Traits\PathNamespace;
 
 class UserServiceProvider extends ServiceProvider
 {
-    protected string $moduleName = 'User';
+    use PathNamespace;
 
-    protected string $moduleNameLower = 'user';
+    protected string $name = 'User';
+
+    protected string $nameLower = 'user';
 
     /**
      * Boot the application events.
@@ -27,7 +30,7 @@ class UserServiceProvider extends ServiceProvider
         $this->registerTranslations();
         $this->registerConfig();
         $this->registerViews();
-        $this->loadMigrationsFrom(module_path($this->moduleName, 'database/migrations'));
+        $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
     }
 
     /**
@@ -37,7 +40,7 @@ class UserServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
-        $this->binRepositories();
+        $this->bindRepositories();
     }
 
     /**
@@ -64,14 +67,14 @@ class UserServiceProvider extends ServiceProvider
      */
     public function registerTranslations(): void
     {
-        $langPath = resource_path('lang/modules/'.$this->moduleNameLower);
+        $langPath = resource_path('lang/modules/'.$this->nameLower);
 
         if (is_dir($langPath)) {
-            $this->loadTranslationsFrom($langPath, $this->moduleNameLower);
+            $this->loadTranslationsFrom($langPath, $this->nameLower);
             $this->loadJsonTranslationsFrom($langPath);
         } else {
-            $this->loadTranslationsFrom(module_path($this->moduleName, 'lang'), $this->moduleNameLower);
-            $this->loadJsonTranslationsFrom(module_path($this->moduleName, 'lang'));
+            $this->loadTranslationsFrom(module_path($this->name, 'lang'), $this->nameLower);
+            $this->loadJsonTranslationsFrom(module_path($this->name, 'lang'));
         }
     }
 
@@ -80,8 +83,8 @@ class UserServiceProvider extends ServiceProvider
      */
     protected function registerConfig(): void
     {
-        $this->publishes([module_path($this->moduleName, 'config/config.php') => config_path($this->moduleNameLower.'.php')], 'config');
-        $this->mergeConfigFrom(module_path($this->moduleName, 'config/config.php'), $this->moduleNameLower);
+        $this->publishes([module_path($this->name, 'config/config.php') => config_path($this->nameLower.'.php')], 'config');
+        $this->mergeConfigFrom(module_path($this->name, 'config/config.php'), $this->nameLower);
     }
 
     /**
@@ -89,15 +92,15 @@ class UserServiceProvider extends ServiceProvider
      */
     public function registerViews(): void
     {
-        $viewPath = resource_path('views/modules/'.$this->moduleNameLower);
-        $sourcePath = module_path($this->moduleName, 'resources/views');
+        $viewPath = resource_path('views/modules/'.$this->nameLower);
+        $sourcePath = module_path($this->name, 'resources/views');
 
-        $this->publishes([$sourcePath => $viewPath], ['views', $this->moduleNameLower.'-module-views']);
+        $this->publishes([$sourcePath => $viewPath], ['views', $this->nameLower.'-module-views']);
 
-        $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->moduleNameLower);
+        $this->loadViewsFrom(array_merge($this->getPublishableViewPaths(), [$sourcePath]), $this->nameLower);
 
-        $componentNamespace = str_replace('/', '\\', config('modules.namespace').'\\'.$this->moduleName.'\\'.ltrim(config('modules.paths.generator.component-class.path'), config('modules.paths.app_folder', '')));
-        Blade::componentNamespace($componentNamespace, $this->moduleNameLower);
+        $componentNamespace = $this->module_namespace($this->name, $this->app_path(config('modules.paths.generator.component-class.path')));
+        Blade::componentNamespace($componentNamespace, $this->nameLower);
     }
 
     /**
@@ -117,15 +120,15 @@ class UserServiceProvider extends ServiceProvider
     {
         $paths = [];
         foreach (config('view.paths') as $path) {
-            if (is_dir($path.'/modules/'.$this->moduleNameLower)) {
-                $paths[] = $path.'/modules/'.$this->moduleNameLower;
+            if (is_dir($path.'/modules/'.$this->nameLower)) {
+                $paths[] = $path.'/modules/'.$this->nameLower;
             }
         }
 
         return $paths;
     }
 
-    private function binRepositories(): void
+    private function bindRepositories(): void
     {
         $this->app->bind(AuthRepositoryInterface::class, AuthRepository::class);
         $this->app->bind(ProfileRepositoryInterface::class, ProfileRepository::class);

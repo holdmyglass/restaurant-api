@@ -36,145 +36,168 @@ trait VersionableTrait
 
     /**
      * Update the model in the database, creating a new version if necessary and handling relationships.
-     *
-     * @return Model|bool|null
      */
-    public function update(array $attributes = [], array $options = []): mixed
+    public function update(array $attributes = [], array $options = []): ?Model
     {
         if (! $this->{$this->currentVersionAttribute}) {
             throw new InvalidVersionException(__('shared::messages.error.only_current_version_can_be_updated'));
         }
-        // Ensure the model is dirty to avoid unnecessary updates
+
         if ($this->isDirty()) {
-            // Check if any preservable attributes have changed
             $versionableAttributesChanged = false;
             foreach ($this->getPreservableAttributes() as $attribute) {
                 if ($this->isDirty($attribute)) {
-                    if ($this->getOriginal($attribute) !== $this->getAttribute($attribute)) {
-                        $versionableAttributesChanged = true;
-                        break;
-                    }
+                    $versionableAttributesChanged = true;
+                    break;
                 }
             }
 
-            // If preservable attributes have changed, create a new version
             if ($versionableAttributesChanged) {
-                // Create a new version of the model
+
+                $original = $this->findOrFail($this->id);
+                $original->{$this->currentVersionAttribute} = false;
+                $original->save();
+
                 $newVersion = $this->replicate();
                 $newVersion->version = $this->version + 1;
                 $newVersion->{$this->currentVersionAttribute} = true; // Set the new version as current
                 $newVersion->save();
 
-                // Update the current version to mark it as not current
-                $this->{$this->currentVersionAttribute} = false;
-                $this->save();
-
-                // Replicate pivot relationships
-                $this->replicatePivotRelationships();
-                $this->replicateHasOneRelationships();
-                $this->replicateHasManyRelationships();
+                // Replicate relationships
+                $this->replicateRelationships();
 
                 return $newVersion;
             }
 
-            // Update the model with the provided attributes
-            return parent::update($attributes, $options);
+            parent::update($attributes, $options);
+
+            return $this;
         }
 
         return null;
     }
 
     /**
-     * Replicate pivot table relationships for the new version, handling circular references and custom pivot models.
+     * Replicate all types of relationships for the new version.
      */
+    protected function replicateRelationships()
+    {
+        $this->replicatePivotRelationships();
+        $this->replicateHasOneRelationships();
+        $this->replicateHasManyRelationships();
+        $this->replicateMorphManyRelationships();
+        $this->replicateMorphToRelationships();
+    }
+
     protected function replicatePivotRelationships()
     {
-        $visitedRelationships = [];
-
         foreach ($this->getRelations() as $relationshipName => $relation) {
             if ($relation instanceof \Illuminate\Database\Eloquent\Relations\BelongsToMany) {
-                $pivotTable = $relation->getTable();
-                $foreignKey = $relation->getForeignKey();
-                $relatedForeignKey = $relation->getRelatedKey();
-
-                // Check for circular references
-                if (in_array($relationshipName, $visitedRelationships)) {
-                    continue;
-                }
-                $visitedRelationships[] = $relationshipName;
-
-                // Find existing pivot records for the current version
-                $existingPivotRecords = $relation->getPivot()->where($foreignKey, $this->getKey())->get();
-
-                // Create new pivot records for the new version
-                foreach ($existingPivotRecords as $pivotRecord) {
-                    $newPivotRecord = $pivotRecord->replicate();
-                    $newPivotRecord->{$foreignKey} = $this->getKey();
-                    $newPivotRecord->{$relatedForeignKey} = $pivotRecord->{$relatedForeignKey};
-                    $newPivotRecord->save();
-
-                    // Handle custom pivot models
-                    if ($pivotRecord instanceof Model) {
-                        $this->replicateModel($newPivotRecord);
-                    }
-                }
+                $this->replicateBelongsToMany($relation);
             }
         }
     }
 
-    /**
-     * Replicate one-to-one relationships for the new version.
-     */
+    protected function replicateBelongsToMany($relation)
+    {
+        $existingPivotRecords = $relation->getPivot()->where($relation->getForeignKey(), $this->getKey())->get();
+
+        foreach ($existingPivotRecords as $pivotRecord) {
+            $newPivotRecord = $pivotRecord->replicate();
+            $newPivotRecord->{$relation->getForeignKey()} = $this->getKey();
+            $newPivotRecord->{$relation->getRelatedKey()} = $pivotRecord->{$relation->getRelatedKey()};
+            $newPivotRecord->save();
+        }
+    }
+
     protected function replicateHasOneRelationships()
     {
         foreach ($this->getRelations() as $relationshipName => $relation) {
             if ($relation instanceof \Illuminate\Database\Eloquent\Relations\HasOne) {
-                $relatedModel = $relation->getRelated();
-                $foreignKey = $relation->getForeignKey();
-
-                // Find existing related record for the current version
-                $existingRelatedRecord = $relatedModel->where($foreignKey, $this->getKey())->first();
-
-                // Create new related record for the new version
-                if ($existingRelatedRecord) {
-                    $newRelatedRecord = $existingRelatedRecord->replicate();
-                    $newRelatedRecord->{$foreignKey} = $this->getKey();
-                    $newRelatedRecord->save();
-
-                    // Handle custom pivot models
-                    if ($newRelatedRecord instanceof Model) {
-                        $this->replicateModel($newRelatedRecord);
-                    }
-                }
+                $this->replicateHasOne($relation);
             }
         }
     }
 
-    /**
-     * Replicate one-to-many relationships for the new version.
-     */
+    protected function replicateHasOne($relation)
+    {
+        $existingRelatedRecord = $relation->getRelated()->where($relation->getForeignKey(), $this->getKey())->first();
+
+        if ($existingRelatedRecord) {
+            $newRelatedRecord = $existingRelatedRecord->replicate();
+            $newRelatedRecord->{$relation->getForeignKey()} = $this->getKey();
+            $newRelatedRecord->save();
+        }
+    }
+
     protected function replicateHasManyRelationships()
     {
         foreach ($this->getRelations() as $relationshipName => $relation) {
             if ($relation instanceof \Illuminate\Database\Eloquent\Relations\HasMany) {
-                $relatedModel = $relation->getRelated();
-                $foreignKey = $relation->getForeignKey();
-
-                // Find existing related records for the current version
-                $existingRelatedRecords = $relatedModel->where($foreignKey, $this->getKey())->get();
-
-                // Create new related records for the new version
-                foreach ($existingRelatedRecords as $relatedRecord) {
-                    $newRelatedRecord = $relatedRecord->replicate();
-                    $newRelatedRecord->{$foreignKey} = $this->getKey();
-                    $newRelatedRecord->save();
-
-                    // Handle custom pivot models
-                    if ($newRelatedRecord instanceof Model) {
-                        $this->replicateModel($newRelatedRecord);
-                    }
-                }
+                $this->replicateHasMany($relation);
             }
+        }
+    }
+
+    protected function replicateHasMany($relation)
+    {
+        $existingRelatedRecords = $relation->getRelated()->where($relation->getForeignKey(), $this->getKey())->get();
+
+        foreach ($existingRelatedRecords as $relatedRecord) {
+            $newRelatedRecord = $relatedRecord->replicate();
+            $newRelatedRecord->{$relation->getForeignKey()} = $this->getKey();
+            $newRelatedRecord->save();
+        }
+    }
+
+    /**
+     * Replicate polymorphic one-to-many relationships for the new version.
+     */
+    protected function replicateMorphManyRelationships()
+    {
+        foreach ($this->getRelations() as $relationshipName => $relation) {
+            if ($relation instanceof \Illuminate\Database\Eloquent\Relations\MorphMany) {
+                $this->replicateMorphMany($relation);
+            }
+        }
+    }
+
+    protected function replicateMorphMany($relation)
+    {
+        $existingRelatedRecords = $relation->getRelated()->where($relation->getMorphType(), $this->getMorphClass())
+            ->where($relation->getMorphKey(), $this->getKey())->get();
+
+        foreach ($existingRelatedRecords as $relatedRecord) {
+            $newRelatedRecord = $relatedRecord->replicate();
+            $newRelatedRecord->{$relation->getMorphKey()} = $this->getKey();
+            $newRelatedRecord->save();
+        }
+    }
+
+    /**
+     * Replicate polymorphic one-to-one relationships for the new version.
+     */
+    protected function replicateMorphToRelationships()
+    {
+        foreach ($this->getRelations() as $relationshipName => $relation) {
+            if ($relation instanceof \Illuminate\Database\Eloquent\Relations\MorphTo) {
+                $this->replicateMorphTo($relation);
+            }
+        }
+    }
+
+    protected function replicateMorphTo($relation)
+    {
+        $relatedModel = $relation->getRelated();
+        $foreignKey = $relation->getForeignKey();
+
+        // Find existing related record for the current version
+        $existingRelatedRecord = $relatedModel->where($foreignKey, $this->getKey())->first();
+
+        if ($existingRelatedRecord) {
+            $newRelatedRecord = $existingRelatedRecord->replicate();
+            $newRelatedRecord->{$foreignKey} = $this->getKey();
+            $newRelatedRecord->save();
         }
     }
 
@@ -195,19 +218,19 @@ trait VersionableTrait
      *
      * @return bool|Model|null
      */
-    public function saveWithVersion(array $options = [])
+    public function saveWithVersion(array $options = []): bool|Model|string|null
     {
         if ($this->isDirty() && ! $this->internalSave) {
             $this->internalSave = true;
             $newVersion = $this->update($this->getDirty());
-            $this->internalSave = false; // Reset the flag
+            $this->internalSave = false; // Reset the flase
 
             return $newVersion;
         }
 
-        $result = parent::save($options);
+        parent::update($this->getDirty(), $options);
 
-        return $result instanceof Model ? $result : $this;
+        return $this;
     }
 
     /**

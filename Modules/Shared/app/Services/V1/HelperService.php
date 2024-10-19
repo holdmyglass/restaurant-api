@@ -3,6 +3,7 @@
 namespace Modules\Shared\Services\V1;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Str;
 
@@ -33,14 +34,10 @@ class HelperService
 
     public static function rankify(Model $model, ?int $desiredRank = null): int
     {
-        $isVersionable = $model->hasVersionableTrait();
-
-        // Retrieve the maximum rank for the model's type, considering version if applicable
-        $maxRank = $model::where($isVersionable ? 'version_identifier' : 'id', $model->{$isVersionable ? 'version_identifier' : 'id'})
-            ->max('rank');
+        $maxRank = $model::max('rank');
 
         // If desired rank is provided and valid, use it
-        $rank = $desiredRank !== null && $desiredRank >= 0 && $desiredRank > $maxRank
+        $rank = $desiredRank !== null && $desiredRank >= 0
         ? $desiredRank
         : $maxRank + 1;
 
@@ -49,7 +46,32 @@ class HelperService
 
     public static function isColumnNullable($table, $field)
     {
-        return Schema::hasColumn($table, $field) && Schema::getColumnType($table, $field) === 'nullable';
+        // Check if the column exists
+        if (! Schema::hasColumn($table, $field)) {
+            return false; // Column does not exist, so it can't be nullable
+        }
+
+        // Get the column details using a raw query
+        $columnDetails = DB::select("SELECT is_nullable FROM information_schema.columns WHERE table_name = '$table' AND column_name = '$field'");
+
+        // Check if the column is nullable
+        return $columnDetails[0]->is_nullable === 'YES';
+    }
+
+    public static function getValueFromNullableCheck(
+        object|array $request,
+        ?Model $model,
+        string $columnName,
+        bool $isUpdate,
+        mixed $defaultValue = null
+    ): mixed {
+        if ($request->$columnName !== null) {
+            return $request->$columnName;
+        } elseif ($isUpdate && $model !== null && ! self::isColumnNullable($model->getTable(), $columnName)) {
+            return $model->$columnName;
+        } else {
+            return $defaultValue;
+        }
     }
 
     //TODO  This method should be moved somewhere and the values should be fetched from database

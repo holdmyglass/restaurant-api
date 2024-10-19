@@ -41,6 +41,7 @@ class ProductCategory extends Model
         'slug',
         'description',
         'image',
+        'rank',
     ];
 
     public $translatable = ['name', 'description'];

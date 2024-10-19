@@ -21,8 +21,6 @@ return new class extends Migration
 
             $table->uuid('id')->primary();
 
-            $table->morphs('pricable');
-
             $table->string('currency')->default(CurrencyEnum::USD);
             $table->string('name')->default(ucfirst(strtolower(PriceTypeEnum::REGULAR->value)).' Price');
             $table->integer('price'); // multiplies by 10,000

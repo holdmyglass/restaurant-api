@@ -124,7 +124,7 @@ class ProductCategoryService
     /**
      * Get the Current Product Category for given Product Category version identifier
      */
-    public function getCurrentProductByVersionIdentifier(string $versionIdentifier): ProductCategory
+    public function getCurrentProductCategoryByVersionIdentifier(string $versionIdentifier): ProductCategory
     {
         $currentProductCategory = $this->read->getProductCategoriesByVersionIdentifier($versionIdentifier)
             ->filter(function ($category) {

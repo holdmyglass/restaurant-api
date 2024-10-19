@@ -8,9 +8,9 @@ use Modules\Product\Models\Product;
 
 interface WriteProductRepositoryInterface
 {
-    public function createProduct(CreateProductRequest $request);
+    public function store(CreateProductRequest $request): Product;
 
-    public function updateProduct(UpdateProductRequest $request, Product $product);
+    public function update(UpdateProductRequest $request, Product $product): Product;
 
-    public function deleteProduct(Product $product);
+    public function destroy(Product $product): bool;
 }

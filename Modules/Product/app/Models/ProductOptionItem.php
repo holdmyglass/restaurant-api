@@ -13,13 +13,28 @@ use Spatie\Translatable\HasTranslations;
 
 class ProductOptionItem extends Model
 {
-    use BlamableTrait, HasTranslations, HasUuids, SoftDeletes, VersionableTrait;
+    use BlamableTrait, HasTranslations, HasUuids, SoftDeletes, VersionableTrait {
+        VersionableTrait::getCasts as getVersionableCasts;
+        HasTranslations::getCasts as getTranslatableCasts;
+    }
+
+    public function getCasts()
+    {
+
+        $casts = array_filter(
+            array_merge($this->getVersionableCasts(), $this->getTranslatableCasts()),
+            fn ($key) => array_key_exists($key, $this->getVersionableCasts() + $this->getTranslatableCasts())
+        );
+
+        return $casts;
+    }
 
     protected $fillable = [
         'name',
         'slug',
         'description',
         'vat',
+        'rank',
     ];
 
     public $translatable = ['name', 'description'];

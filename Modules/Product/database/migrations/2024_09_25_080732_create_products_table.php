@@ -23,7 +23,7 @@ return new class extends Migration
             $table->string('slug');
             $table->json('description')->nullable();
             $table->string('image')->nullable();
-            $table->integer('rank')->nullable();
+            $table->integer('rank');
 
             // availability
             $table->boolean('available')->default(true);

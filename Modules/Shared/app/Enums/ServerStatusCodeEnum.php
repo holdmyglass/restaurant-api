@@ -14,4 +14,5 @@ enum ServerStatusCodeEnum: int
     case UNPROCESSABLE_CONTENT = 422;
     case INTERNAL_SERVER_ERROR = 500;
     case SERVICE_UNAVAILABLE = 503;
+
 }

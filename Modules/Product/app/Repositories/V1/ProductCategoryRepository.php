@@ -70,7 +70,9 @@ class ProductCategoryRepository implements ReadProductCategoryRepositoryInterfac
         $productCategory->rank = $productCategoryDTO->rank;
         $productCategory->type = $productcategoryDTO->type ?? ProductCategoryTypeEnum::DISH;
 
-        return $productCategory->saveWithVersion();
+        $productCategory = $productCategory->saveWithVersion();
+
+        return $productCategory;
     }
 
     public function destroy(ProductCategory $productcategory): bool

@@ -34,7 +34,8 @@ class RegisterRequest extends FormRequest
             ],
             'password' => [
                 'required',
-                'regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/', 'confirmed',
+                // 'regex:/^(?=.*?[A-Z])(?=.*?[a-z])(?=.*?[0-9])(?=.*?[#?!@$%^&*-]).{8,}$/', 'confirmed',
+                'min:8',
             ],
             'terms' => ['accepted'],
         ];
