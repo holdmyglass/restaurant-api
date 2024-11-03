@@ -28,7 +28,9 @@ class CreateProductCategoryRequest extends FormRequest
             ],
             'image' => [
                 'sometimes',
+                'nullable',
                 'image',
+                'mimes:png,jpg',
             ],
             'type' => [
                 'sometimes',
@@ -47,6 +49,7 @@ class CreateProductCategoryRequest extends FormRequest
         return [
             'name.required' => __('product::messages.product_category.name_required'),
             'image.image' => __('product::messages.product_category.image_image'),
+            'image.mimes' => __('product::messages.product_category.image_mimes'),
             'type.Illuminate\Validation\Rules\Enum' => __('product::messages.product_category.type_enum'),
             'rank.integer' => __('product::messages.product_category.rank_positive_number'),
             'rank.gt' => __('product::messages.product_category.rank_positive_number'),

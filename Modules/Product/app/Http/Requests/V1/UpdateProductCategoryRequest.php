@@ -9,9 +9,6 @@ use Modules\Shared\Rules\TranslatableFieldRule;
 
 class UpdateProductCategoryRequest extends FormRequest
 {
-    /**
-     * Get the validation rules that apply to the request.
-     */
     public function rules(): array
     {
         return [
@@ -28,6 +25,7 @@ class UpdateProductCategoryRequest extends FormRequest
             'image' => [
                 'sometimes',
                 'image',
+                'mimes:png,jpg',
             ],
             'type' => [
                 'sometimes',
@@ -46,6 +44,7 @@ class UpdateProductCategoryRequest extends FormRequest
         return [
             'name.required' => __('product::messages.product_category.name_required'),
             'image.image' => __('product::messages.product_category.image_image'),
+            'image.mimes' => __('product::messages.product_category.image_mimes'),
             'type.Illuminate\Validation\Rules\Enum' => __('product::messages.product_category.type_enum'),
             'rank.integer' => __('product::messages.product_category.rank_positive_number'),
             'rank.gt' => __('product::messages.product_category.rank_positive_number'),

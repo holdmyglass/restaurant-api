@@ -22,6 +22,8 @@ class ProductCategoryResource extends JsonResource
                 'name' => $category->getTranslations('name'),
                 'description' => $category->getTranslations('description'),
             ],
+            'rank' => $category->rank,
+            'image' => $category->image,
         ];
     }
 }

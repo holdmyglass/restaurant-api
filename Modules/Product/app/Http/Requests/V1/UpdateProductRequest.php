@@ -37,6 +37,7 @@ class UpdateProductRequest extends FormRequest
             'image' => [
                 'sometimes',
                 'image',
+                'mimes:png,jpg',
             ],
             'rank' => [
                 'sometimes',
@@ -104,6 +105,7 @@ class UpdateProductRequest extends FormRequest
             'name.array' => __('product::messages.product.name_must_be_array'),
             'description.array' => __('product::messages.product.description_must_be_array'),
             'image.image' => __('product::messages.product.image_image'),
+            'image.mimes' => __('product::messages.product.image_mimes'),
             'rank.integer' => __('product::messages.product.rank_positive_number'),
             'rank.gt' => __('product::messages.product.rank_positive_number'),
             'price.array' => __('product::messages.product.price_must_be_array'),

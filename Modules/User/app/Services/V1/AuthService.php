@@ -78,7 +78,7 @@ class AuthService
             RegisterOptionEnum::PHONE->value => PhoneVerificationCodeGenerated::class,
         };
 
-        event(new $eventClass($user, $token, $this->appService));
+        dispatch(new $eventClass($user, $token, $this->appService));
 
         return [
             'status_code' => ServerStatusCodeEnum::CREATED,
