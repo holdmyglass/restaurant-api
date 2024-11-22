@@ -6,6 +6,8 @@ use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Modules\File\Enums\ImageSizeEnum;
+use Modules\File\Services\V1\ImageUploadService;
 use Modules\Product\Http\Requests\V1\CreateProductRequest;
 use Modules\Product\Http\Requests\V1\UpdateProductRequest;
 use Modules\Product\Interfaces\V1\ReadPriceRepositoryInterface;
@@ -13,7 +15,7 @@ use Modules\Product\Interfaces\V1\ReadProductRepositoryInterface;
 use Modules\Product\Interfaces\V1\WritePriceRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductRepositoryInterface;
 use Modules\Product\Models\Product;
-use Modules\Product\Transformers\V1\ProductCollection;
+use Modules\Product\Transformers\V1\ProductCategoryResource;
 use Modules\Product\Transformers\V1\ProductResource;
 use Modules\Shared\Enums\ServerStatusCodeEnum;
 
@@ -24,6 +26,8 @@ class ProductService
         private readonly WriteProductRepositoryInterface $writeProduct,
         private readonly ReadPriceRepositoryInterface $readPrice,
         private readonly WritePriceRepositoryInterface $writePrice,
+        private readonly ProductCategoryService $productCategoryService,
+        private readonly ImageUploadService $imageUploadService
     ) {}
 
     /**
@@ -42,7 +46,7 @@ class ProductService
         return
         [
             'data' => [
-                'products' => new ProductCollection($current_products),
+                'products' => ProductResource::collection($current_products),
                 'count' => count($current_products),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -62,7 +66,7 @@ class ProductService
         return
         [
             'data' => [
-                'products' => new ProductCollection($products),
+                'products' => ProductResource::collection($products),
                 'count' => count($products),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -77,6 +81,9 @@ class ProductService
      */
     public function getProductById(string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
 
         return
         [
@@ -131,30 +138,67 @@ class ProductService
      */
     public function createProduct(CreateProductRequest $request): array
     {
-        $productRequest = $request->except(['price', 'category']);
+        $productRequest = $request->except(['price', 'category', 'option']);
+
+        $image = null;
+
+        if ($request->image) {
+            $image = $this->imageUploadService->upload($request->file('image'), [ImageSizeEnum::AVATAR, ImageSizeEnum::SMALLSQUARE, ImageSizeEnum::SMALLHORIZONTAL, ImageSizeEnum::SMALLVERTICAL,  ImageSizeEnum::MEDIUMSQUARE, ImageSizeEnum::MEDIUMHORIZONTAL, ImageSizeEnum::MEDIUMHORIZONTAL]);
+        }
+
+        if ($image) {
+            $productRequest['image'] = $image; // Add the image to the request array
+        }
+
         $product = $this->writeProduct->store(new CreateProductRequest($productRequest));
 
-        if (! is_null($request->price)) { // Check if $request->price is not null
+        if (! is_null($request->price)) {
             foreach ($request->price as $price) {
-                if (! is_null($price)) { // Check if each price is not null
-                    $saved_price = $this->writePrice->store((object) $price);
-                    $product->prices()->attach($saved_price->id, ['pricable_type' => Product::class]);
+                if ($price !== null) {
+                    $saved_price = $this->writePrice->store((object) $price, Product::class, $product->id);
                 }
             }
         }
 
         try {
-            if (! is_null($request->category)) { // Check if $request->category is not null
+            if ($request->category !== null) {
 
                 $product->categories()->detach();
 
-                foreach ($request->category as $categoryId) { // Iterate over each category ID
-                    if (! is_null($categoryId)) { // Check if each category ID is not null
-                        $product->categories()->attach($categoryId); // Attach the category to the product
+                foreach ($request->category as $categoryId) {
+                    if (! is_null($categoryId)) {
+                        $product->categories()->attach($categoryId);
                     }
                 }
 
             }
+
+        } catch (QueryException $e) {
+
+            // TODO: LOG This errorError
+            // $errorMessage = $e->getMessage();
+
+            throw new QueryException(
+                $e->getConnectionName(),
+                $e->getSql(),
+                $e->getBindings(),
+                $e // Pass the original exception for chaining
+            );
+        }
+
+        try {
+            if ($request->option !== null) {
+
+                $product->options()->detach();
+
+                foreach ($request->option as $optionId) {
+                    if (! is_null($optionId)) { // Check if each category ID is not null
+                        $product->options()->attach($optionId); // Attach the category to the product
+                    }
+                }
+
+            }
+
         } catch (QueryException $e) {
 
             // TODO: LOG This errorError
@@ -186,8 +230,12 @@ class ProductService
     public function updateProduct(UpdateProductRequest $request, string $id): array
     {
 
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         $product = $this->readProduct->getProductById($id);
-        $productRequest = $request->except(['price', 'category']);
+        $productRequest = $request->except(['price', 'category', 'option']);
         $product = $this->writeProduct->update(new UpdateProductRequest($productRequest), $product);
 
         try {
@@ -232,6 +280,10 @@ class ProductService
      */
     public function deleteProduct(string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         $this->writeProduct->destroy($this->getProductFromId($id));
 
         return
@@ -239,6 +291,21 @@ class ProductService
             'status_code' => ServerStatusCodeEnum::NO_CONTENT,
             'status' => 'success',
             'message' => __('shared::messages.success.deleted_successfully'),
+        ];
+    }
+
+    public function getProductList(): array
+    {
+
+        $categories = $this->productCategoryService->getCurrentProductCategories();
+
+        return
+        [
+            'data' => [
+                'categories' => ProductCategoryResource::collection($categories),
+            ],
+            'status_code' => ServerStatusCodeEnum::OK,
+            'status' => 'success',
         ];
     }
 

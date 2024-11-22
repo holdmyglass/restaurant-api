@@ -4,7 +4,7 @@ namespace Modules\Product\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\Shared\Models\Observers\BlamableTrait;
@@ -34,29 +34,55 @@ class ProductOptionItem extends Model
         'slug',
         'description',
         'vat',
-        'rank',
+        'min',
+        'max',
     ];
 
     public $translatable = ['name', 'description'];
 
-    public function prices(): HasMany
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
     {
-        return $this->hasMany(Price::class);
+        return [
+            'available' => 'boolean',
+        ];
     }
 
-    public function price(): MorphMany
+    public function prices(): MorphMany
     {
-        return $this->morphMany(Price::class, 'pricable')
-            ->where('is_current_version', true)
-            ->where(function ($query) {
-                $query->whereNull('valid_from')
-                    ->orWhere('valid_from', '<=', now());
-            })
-            ->where(function ($query) {
-                $query->whereNull('valid_until')
-                    ->orWhere('valid_until', '>=', now());
-            })
-            ->latest();
+        return $this->morphMany(Price::class, 'priceable');
+    }
+
+    public function getDistinctPrices()
+    {
+        // Fetch all prices associated with the product where is_current_version is true
+        $prices = $this->prices()->where('is_current_version', true)->latest()->get();
+
+        // Initialize a collection to hold the distinct prices
+        $distinctPrices = collect();
+
+        // Loop through the prices to group by price_type and currency
+        foreach ($prices as $price) {
+            // Check if the distinctPrices collection already has a price with the same price_type and currency
+            if (! $distinctPrices->contains(function ($existingPrice) use ($price) {
+                return $existingPrice->price_type === $price->price_type && $existingPrice->currency === $price->currency;
+            })) {
+                // If not, add the price to the distinctPrices collection
+                $distinctPrices->push($price);
+            }
+        }
+
+        // Return the collection of distinct Price model instances
+        return $distinctPrices;
+    }
+
+    public function items(): BelongsToMany
+    {
+        return $this->belongsToMany(ProductOption::class)->where('is_current_version', true);
     }
 
     /**

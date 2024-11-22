@@ -2,7 +2,7 @@
 
 // Product Option Items Routes
 
-include __DIR__.'/api/v1/productOption.php';
+include __DIR__.'/api/v1/productOptionItem.php';
 
 // Product Option Routes
 

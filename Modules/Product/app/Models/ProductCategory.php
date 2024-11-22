@@ -68,6 +68,11 @@ class ProductCategory extends Model
         return $this->belongsToMany(Product::class)->where('is_current_version', true);
     }
 
+    public function allProducts(): BelongsToMany
+    {
+        return $this->belongsToMany(Product::class);
+    }
+
     public function parent(): BelongsTo
     {
         return $this->belongsTo(self::class, 'parent_id');

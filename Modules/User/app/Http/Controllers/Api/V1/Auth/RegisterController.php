@@ -18,6 +18,12 @@ final class RegisterController extends Controller
 
     public function register(RegisterRequest $request): JsonResponse
     {
+        $res = $this->authService->register($request);
+
+        $response = ApiResponse::success($res['data'], $res['message'], $res['status'], $res['status_code']);
+
+        return $response->toJson();
+
         try {
 
             $res = $this->authService->register($request);

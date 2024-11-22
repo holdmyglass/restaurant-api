@@ -7,10 +7,10 @@ use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Modules\Product\Http\Requests\V1\CreateProductOptionRequest;
 use Modules\Product\Http\Requests\V1\UpdateProductOptionRequest;
+use Modules\Product\Http\Requests\V1\UpdateProductOptionWithItemRequest;
 use Modules\Product\Interfaces\V1\ReadProductOptionRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductOptionRepositoryInterface;
 use Modules\Product\Models\ProductOption;
-use Modules\Product\Transformers\V1\ProductOptionCollection;
 use Modules\Product\Transformers\V1\ProductOptionResource;
 use Modules\Shared\Enums\ServerStatusCodeEnum;
 
@@ -37,7 +37,7 @@ class ProductOptionService
         return
         [
             'data' => [
-                'product_options' => new ProductOptionCollection($current_options),
+                'product_options' => ProductOptionResource::collection($current_options),
                 'count' => count($current_options),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -53,11 +53,11 @@ class ProductOptionService
      */
     public function getOptionById(string $id): array
     {
-        return
-        [
-            'data' => [
-                'product_options' => new ProductOptionResource($this->getProductOptionFromId($id)),
-            ],
+        $productOption = $this->getProductOptionFromId($id);
+        $productOptionResource = new ProductOptionResource($productOption);
+
+        return [
+            'data' => $productOptionResource->toArray(request()), // Convert to array
             'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
         ];
@@ -75,7 +75,7 @@ class ProductOptionService
         return
         [
             'data' => [
-                'product_options' => new ProductOptionCollection($options),
+                'product_options' => ProductOptionResource::collection($options),
                 'count' => count($options),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -110,6 +110,9 @@ class ProductOptionService
      */
     public function updateOption(UpdateProductOptionRequest $request, string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
 
         $productOption = $this->getProductOptionFromId($id);
 
@@ -126,12 +129,41 @@ class ProductOptionService
     }
 
     /**
+     * Update current option
+     *
+     * @return array<string, mixed>
+     */
+    public function updateOptionItems(UpdateProductOptionWithItemRequest $request, string $id): array
+    {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(message: __('shared::messages.error.invalid_resource_identifier'));
+        }
+
+        $productOption = $this->getProductOptionFromId($id);
+
+        $productOption->items()->sync($request->item);
+
+        return
+        [
+            'data' => [
+                // 'product_option' => new ProductOptionItemsResource($option),
+            ],
+            'status_code' => ServerStatusCodeEnum::OK,
+            'status' => 'success',
+        ];
+    }
+
+    /**
      * Delete Option
      *
      * @return array<string, mixed>
      */
     public function deleteOption(string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         $this->writeProductOption->destroy($this->getProductOptionFromId($id));
 
         return

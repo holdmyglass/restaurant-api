@@ -24,16 +24,24 @@ class UpdateProductOptionItemRequest extends FormRequest
                 'array',
                 new TranslatableFieldRule('noneOrAll'), // either all or none required
             ],
-            'max' => [
-                'sometimes',
+            'min' => [
                 'required',
                 'integer',
-                'min:1',
+                'min:0',
             ],
-            'is_active' => [
-                'sometimes',
+            'max' => [
+                'required',
+                'integer',
+                'gte:min',
+            ],
+            'available' => [
                 'required',
                 'boolean',
+            ],
+            'vat' => [
+                'required',
+                'numeric',
+                'min:0',
             ],
         ];
     }
@@ -41,15 +49,20 @@ class UpdateProductOptionItemRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.required' => __('product::messages.product_option.name_required'),
-            'name.array' => __('product::messages.product_option.name_must_be_array'),
-            'description.array' => __('product::messages.product_option.description_must_be_array'),
-            'description.noneOrAll' => __('product::messages.product_option.description_none_or_all_required'),
-            'max.required' => __('product::messages.product_option.max_required'),
-            'max.integer' => __('product::messages.product_option.max_must_be_integer'),
-            'max.min' => __('product::messages.product_option.max_must_be_at_least_1'),
-            'is_active.required' => __('product::messages.product_option.is_active_required'),
-            'is_active.boolean' => __('product::messages.product_option.is_active_must_be_boolean'),
+            'name.required' => __('product::messages.product_option_item.name_required'),
+            'name.array' => __('product::messages.product_option_item.name_must_be_array'),
+            'description.array' => __('product::messages.product_option_item.description_must_be_array'),
+            'description.noneOrAll' => __('product::messages.product_option_item.description_none_or_all_required'),
+            'min.required' => __('product::messages.product_option_item.min_required'),
+            'min.integer' => __('product::messages.product_option_item.min_must_be_integer'),
+            'min.min' => __('product::messages.product_option_item.min_must_be_at_least_0'),
+            'max.required' => __('product::messages.product_option_item.max_required'),
+            'max.integer' => __('product::messages.product_option_item.max_must_be_integer'),
+            'max.gte' => __('product::messages.product_option_item.max_must_be_greater_or_equal_min'),
+            'available.required' => __('product::messages.product_option_item.available_required'),
+            'available.boolean' => __('product::messages.product_option_item.available_must_be_boolean'),
+            'vat.required' => __('product::messages.product_option_item.vat.required'),
+            'vat.numeric' => __('product::messages.product_option_item.vat.numeric'),
         ];
     }
 }

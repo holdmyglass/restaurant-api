@@ -41,7 +41,10 @@ return [
         'eat_in_must_be_boolean' => 'De producteetoptie moet een boolean waarde zijn.',
         'offer_required' => 'De productaanbiedingsoptie is verplicht.',
         'offer_must_be_boolean' => 'De productaanbiedingsoptie moet een boolean waarde zijn.',
+        'vat_required' => 'U moet specificeren welk percentage btw van toepassing is op dit product',
+        'vat_numeric' => 'Btw moet een getal zijn groter dan of gelijk aan nul.',
     ],
+
     'product_option' => [
         'name_required' => 'De optienaam is verplicht.',
         'name_must_be_array' => 'De optienaam moet een array zijn.',
@@ -55,8 +58,10 @@ return [
         'max_required' => 'Het minimum aantal optie-items dat moet worden gekozen, moet groter zijn dan 0.',
         'max_must_be_integer' => 'Dit moet een getal zijn',
         'max_must_be_greater_or_equal_min' => 'Dit moet groter zijn dan of gelijk aan het minimum aantal items dat kan worden gekozen',
-        'is_active_required' => 'De actieve status is verplicht.',
-        'is_active_must_be_boolean' => 'De actieve status moet een boolean zijn.',
+        'active_required' => 'De actieve status is verplicht.',
+        'active_must_be_boolean' => 'De actieve status moet een boolean zijn.',
+        'item_array' => 'De item moet een array zijn.',
+        'item_id_uuid' => 'De item ID is ongeldig.',
     ],
 
     'product_option_item' => [
@@ -64,10 +69,15 @@ return [
         'name_must_be_array' => 'De optie-itemnaam moet een array zijn.',
         'description_must_be_array' => 'De optie-itembeschrijving moet een array zijn.',
         'description_none_or_all_required' => 'De optie-itembeschrijving moet allemaal of helemaal niet zijn.',
+        'min_required' => 'Het minimum aantal optie-items dat moet worden gekozen, moet groter zijn dan 0',
+        'min_must_be_integer' => 'Dit moet een getal zijn.',
+        'min_must_be_at_least_0' => 'Dit moet 0 of groter zijn',
         'max_required' => 'Het maximum aantal van dit item dat per optie kan worden gekozen.',
         'max_must_be_integer' => 'Dit moet een getal zijn',
-        'max_must_be_at_least_1' => 'Dit moet groter zijn 0',
-        'is_active_required' => 'De actieve status is verplicht.',
-        'is_active_must_be_boolean' => 'De actieve status moet een boolean zijn.',
+        'max_must_be_greater_or_equal_min' => 'Dit moet groter zijn dan of gelijk aan het minimum aantal items dat kan worden gekozen',
+        'available_required' => 'De actieve status is verplicht.',
+        'available_must_be_boolean' => 'De actieve status moet een boolean zijn.',
+        'vat_required' => 'U moet specificeren welk percentage btw van toepassing is op dit product',
+        'vat_numeric' => 'Btw moet een getal zijn groter dan of gelijk aan nul.',
     ],
 ];

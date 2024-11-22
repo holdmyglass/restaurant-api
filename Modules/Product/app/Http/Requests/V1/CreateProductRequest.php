@@ -73,6 +73,11 @@ class CreateProductRequest extends FormRequest
                 'nullable',
                 'date',
             ],
+            'vat' => [
+                'required',
+                'numeric',
+                'min:0',
+            ],
             'available' => [
                 'required',
                 'boolean',
@@ -92,6 +97,16 @@ class CreateProductRequest extends FormRequest
             'offer' => [
                 'required',
                 'boolean',
+            ],
+            'valid_from' => [
+                'sometimes',
+                'nullable',
+                'date',
+            ],
+            'valid_until' => [
+                'sometimes',
+                'nullable',
+                'date',
             ],
         ];
     }
@@ -128,6 +143,10 @@ class CreateProductRequest extends FormRequest
             'eat_in.boolean' => __('product::messages.product.eat_in_must_be_boolean'),
             'offer.required' => __('product::messages.product.offer_required'),
             'offer.boolean' => __('product::messages.product.offer_must_be_boolean'),
+            'option.array' => __('product::messages.product.category_array'),
+            'option.*.uuid' => __('product::messages.product.category_id_uuid'),
+            'vat.required' => __('product::messages.product.vat.required'),
+            'vat.numeric' => __('product::messages.product.vat.numeric'),
         ];
     }
 }

@@ -38,9 +38,32 @@ class ProductOptionItemController
         }
     }
 
-    public function store(CreateProductOptionItemRequest $request): JsonResponse
+    public function byOption(string $id): JsonResponse
     {
 
+        try {
+
+            $res = $this->productOptionItemService->getItemsByOption($id);
+
+            $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+            return $response->toJson();
+
+        } catch (\Throwable $th) {
+
+            $response = ApiResponse::error(__('shared::messages.error.something_went_wrong'), 'error', ServerStatusCodeEnum::INTERNAL_SERVER_ERROR);
+
+            return $response->toJson();
+        }
+    }
+
+    public function store(CreateProductOptionItemRequest $request): JsonResponse
+    {
+        $res = $this->productOptionItemService->createItem($request);
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
         try {
 
             $res = $this->productOptionItemService->createItemn($request);

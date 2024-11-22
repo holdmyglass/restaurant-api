@@ -21,6 +21,12 @@ final class ProductCategoryController extends Controller
 
     public function index(): JsonResponse
     {
+        $res = $this->productCategoryService->getProductCategories();
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
+
         try {
 
             $res = $this->productCategoryService->getProductCategories();
@@ -39,6 +45,11 @@ final class ProductCategoryController extends Controller
 
     public function store(CreateProductCategoryRequest $request): JsonResponse
     {
+        $res = $this->productCategoryService->createProductCategory($request);
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
 
         try {
 
@@ -101,7 +112,7 @@ final class ProductCategoryController extends Controller
 
             return $response->toJson();
         } catch (InvalidVersionException $e) {
-            $response = ApiResponse::error($e->getMessage(), 'error', ServerStatusCodeEnum::UNPROCESSABLE_CONTENT);
+            $response = ApiResponse::error($e->getMessage(), 'error', ServerStatusCodeEnum::BAD_REQUEST);
 
             return $response->toJson();
         } catch (\Throwable $th) {

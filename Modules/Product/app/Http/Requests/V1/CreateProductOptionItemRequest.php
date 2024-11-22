@@ -24,14 +24,24 @@ class CreateProductOptionItemRequest extends FormRequest
                 'array',
                 new TranslatableFieldRule('noneOrAll'), // either all or none required
             ],
+            'min' => [
+                'required',
+                'integer',
+                'min:0',
+            ],
             'max' => [
                 'required',
                 'integer',
-                'min:1',
+                'gte:min',
             ],
-            'is_active' => [
+            'available' => [
                 'required',
                 'boolean',
+            ],
+            'vat' => [
+                'required',
+                'numeric',
+                'min:0',
             ],
         ];
     }
@@ -43,11 +53,16 @@ class CreateProductOptionItemRequest extends FormRequest
             'name.array' => __('product::messages.product_option_item.name_must_be_array'),
             'description.array' => __('product::messages.product_option_item.description_must_be_array'),
             'description.noneOrAll' => __('product::messages.product_option_item.description_none_or_all_required'),
+            'min.required' => __('product::messages.product_option_item.min_required'),
+            'min.integer' => __('product::messages.product_option_item.min_must_be_integer'),
+            'min.min' => __('product::messages.product_option_item.min_must_be_at_least_0'),
             'max.required' => __('product::messages.product_option_item.max_required'),
             'max.integer' => __('product::messages.product_option_item.max_must_be_integer'),
-            'max.min' => __('product::messages.product_option_item.max_must_be_at_least_1'),
-            'is_active.required' => __('product::messages.product_option_item.is_active_required'),
-            'is_active.boolean' => __('product::messages.product_option_item.is_active_must_be_boolean'),
+            'max.gte' => __('product::messages.product_option_item.max_must_be_greater_or_equal_min'),
+            'available.required' => __('product::messages.product_option_item.available_required'),
+            'available.boolean' => __('product::messages.product_option_item.available_must_be_boolean'),
+            'vat.required' => __('product::messages.product_option_item.vat.required'),
+            'vat.numeric' => __('product::messages.product_option_item.vat.numeric'),
         ];
     }
 }

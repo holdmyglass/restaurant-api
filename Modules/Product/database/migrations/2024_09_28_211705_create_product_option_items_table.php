@@ -3,7 +3,6 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
-use Modules\Product\Enums\ProductOptionTypeEnum;
 use Modules\Shared\Models\Migrations\BlamableMigrationTrait;
 use Modules\Shared\Models\Migrations\VersionableTraitMigration;
 
@@ -22,8 +21,9 @@ return new class extends Migration
             $table->json('name');
             $table->string('slug');
             $table->json('description')->nullable();
-            $table->string('level')->default(value: ProductOptionTypeEnum::SUPPLEMENT);
             $table->integer('rank');
+            $table->integer('min')->default(0); // min number of items that need to be chosen per option
+            $table->integer('max')->default(1); // max number of this item that can to be chosen per option
 
             // availability
             $table->boolean('available')->default(true);

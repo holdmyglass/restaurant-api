@@ -98,7 +98,7 @@ class ProductOptionRepository implements ReadProductOptionRepositoryInterface, W
             ProductOptionTypeEnum::from(HelperService::getValueFromNullableCheck($request, $productOption, 'type', $isUpdate)),
             HelperService::getValueFromNullableCheck($request, $productOption, 'min', $isUpdate),
             HelperService::getValueFromNullableCheck($request, $productOption, 'max', $isUpdate),
-            HelperService::getValueFromNullableCheck($request, $productOption, 'is_active', $isUpdate)
+            HelperService::getValueFromNullableCheck($request, $productOption, 'active', $isUpdate)
         );
     }
 }

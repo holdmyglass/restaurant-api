@@ -15,8 +15,13 @@ class PriceResource extends JsonResource
     {
 
         return [
-            'price' => $this->formatPrice($this->price, $this->currency),
+            'id' => $this->id,
+            'rawPrice' => $this->price,
+            'price' => $this->formatPrice($this->price, CurrencyEnum::from($this->currency)),
             'currency' => $this->currency,
+            'type' => $this->price_type,
+            'validFrom' => $this->valid_from,
+            'validUntil' => $this->valivalid_until,
         ];
     }
 

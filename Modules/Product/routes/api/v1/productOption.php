@@ -18,5 +18,6 @@ Route::prefix('v1/product/option')->group(function () {
         Route::post('/', [ProductOptionController::class, 'store'])->name('product.option.store');
         Route::put('/{id}', [ProductOptionController::class, 'update'])->name('product.option.update');
         Route::delete('/{id}', [ProductOptionController::class, 'destroy'])->name('product.option.delete');
+        Route::put('/{id}/update-item', [ProductOptionController::class, 'updateItem'])->name('product.option.update.item');
     });
 });

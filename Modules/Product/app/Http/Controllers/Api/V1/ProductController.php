@@ -22,6 +22,11 @@ final class ProductController extends Controller
 
     public function index(): JsonResponse
     {
+        $res = $this->productService->getProducts();
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
         try {
 
             $res = $this->productService->getProducts();
@@ -41,6 +46,11 @@ final class ProductController extends Controller
     public function store(CreateProductRequest $request): JsonResponse
     {
 
+        $res = $this->productService->createProduct($request);
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
         try {
 
             $res = $this->productService->createProduct($request);
@@ -59,6 +69,11 @@ final class ProductController extends Controller
 
     public function show(string $id): JsonResponse
     {
+        $res = $this->productService->getProductById($id);
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
+
         try {
             $res = $this->productService->getProductById($id);
             $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
@@ -148,5 +163,14 @@ final class ProductController extends Controller
             return $response->toJson();
         }
 
+    }
+
+    public function list(): JsonResponse
+    {
+        $res = $this->productService->getProductList();
+
+        $response = ApiResponse::success($res['data'], null, $res['status'], $res['status_code']);
+
+        return $response->toJson();
     }
 }

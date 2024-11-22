@@ -6,6 +6,8 @@ use Modules\Product\Http\Controllers\Api\V1\ProductController;
 
 Route::prefix('v1/product')->group(function () {
 
+    Route::get('/list', [ProductController::class, 'list'])->name('product.list');
+
     Route::get('/', [ProductController::class, 'index'])->name('product.index');
 
     Route::get('/{id}', [ProductController::class, 'show'])->name('product.show');

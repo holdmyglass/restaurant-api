@@ -4,9 +4,8 @@ namespace Modules\Product\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Modules\Product\Interfaces\V1\PricableInterface;
 use Modules\Shared\Models\Observers\BlamableTrait;
 use Modules\Shared\Models\Observers\VersionableTrait;
 
@@ -20,8 +19,11 @@ class Price extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'product_id',
         'price',
         'currency',
+        'name',
+        'price_type',
     ];
 
     /**
@@ -42,10 +44,8 @@ class Price extends Model
         ];
     }
 
-    public function pricables(): MorphToMany
+    public function priceable(): MorphTo
     {
-
-        return $this->morphToMany(PricableInterface::class, 'pricable', 'price_pricable')
-            ->withTimestamps();
+        return $this->morphTo();
     }
 }

@@ -3,6 +3,7 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
+use Modules\Product\Enums\ProductOptionTypeEnum;
 use Modules\Shared\Models\Migrations\BlamableMigrationTrait;
 use Modules\Shared\Models\Migrations\VersionableTraitMigration;
 
@@ -22,12 +23,11 @@ return new class extends Migration
             $table->json('name');
             $table->string('slug');
             $table->json('description')->nullable();
-            $table->string('type'); // option, supplement, gift etc
-
+            $table->string('type')->default(value: ProductOptionTypeEnum::SUPPLEMENT);
             $table->integer('min')->default(1); // min number of items that need to be chosen
             $table->integer('max')->default(1); // max number of items that can to be chosen
 
-            $table->boolean('is_active')->default(true);
+            $table->boolean('active')->default(true);
 
             // Blamable
             $this->runBlamable($table);

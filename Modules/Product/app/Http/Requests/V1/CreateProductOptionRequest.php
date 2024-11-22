@@ -9,6 +9,12 @@ use Modules\Shared\Rules\TranslatableFieldRule;
 
 class CreateProductOptionRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        // Dump the request data before validation
+        \Log::info('Request Data:', $this->all());
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -33,14 +39,14 @@ class CreateProductOptionRequest extends FormRequest
             'min' => [
                 'required',
                 'integer',
-                'min:1',
+                'min:0',
             ],
             'max' => [
                 'required',
                 'integer',
                 'gte:min',
             ],
-            'is_active' => [
+            'active' => [
                 'required',
                 'boolean',
             ],
@@ -58,12 +64,12 @@ class CreateProductOptionRequest extends FormRequest
             'type.enum' => __('product::messages.product_option.type_invalid'),
             'min.required' => __('product::messages.product_option.min_required'),
             'min.integer' => __('product::messages.product_option.min_must_be_integer'),
-            'min.min' => __('product::messages.product_option.min_must_be_at_least_1'),
+            'min.min' => __('product::messages.product_option.min_must_be_at_least_0'),
             'max.required' => __('product::messages.product_option.max_required'),
             'max.integer' => __('product::messages.product_option.max_must_be_integer'),
             'max.gte' => __('product::messages.product_option.max_must_be_greater_or_equal_min'),
-            'is_active.required' => __('product::messages.product_option.is_active_required'),
-            'is_active.boolean' => __('product::messages.product_option.is_active_must_be_boolean'),
+            'active.required' => __('product::messages.product_option.active_required'),
+            'active.boolean' => __('product::messages.product_option.active_must_be_boolean'),
         ];
     }
 }

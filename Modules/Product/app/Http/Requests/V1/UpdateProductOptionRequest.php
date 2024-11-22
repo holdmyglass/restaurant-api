@@ -9,6 +9,12 @@ use Modules\Shared\Rules\TranslatableFieldRule;
 
 class UpdateProductOptionRequest extends FormRequest
 {
+    protected function prepareForValidation()
+    {
+        // Dump the request data before validation
+        \Log::info('Request Data:', $this->all());
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -42,7 +48,7 @@ class UpdateProductOptionRequest extends FormRequest
                 'integer',
                 'gte:min',
             ],
-            'is_active' => [
+            'active' => [
                 'sometimes',
                 'required',
                 'boolean',
@@ -65,8 +71,8 @@ class UpdateProductOptionRequest extends FormRequest
             'max.required' => __('product::messages.product_option.max_required'),
             'max.integer' => __('product::messages.product_option.max_must_be_integer'),
             'max.gte' => __('product::messages.product_option.max_must_be_greater_or_equal_min'),
-            'is_active.required' => __('product::messages.product_option.is_active_required'),
-            'is_active.boolean' => __('product::messages.product_option.is_active_must_be_boolean'),
+            'active.required' => __('product::messages.product_option.active_required'),
+            'active.boolean' => __('product::messages.product_option.active_must_be_boolean'),
         ];
     }
 }

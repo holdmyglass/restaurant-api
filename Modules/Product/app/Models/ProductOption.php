@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Product\Enums\ProductOptionTypeEnum;
 use Modules\Shared\Models\Observers\BlamableTrait;
 use Modules\Shared\Models\Observers\VersionableTrait;
 use Spatie\Translatable\HasTranslations;
@@ -39,11 +40,24 @@ class ProductOption extends Model
         'description',
         'min',
         'max',
-        'is_active',
+        'active',
         'type',
     ];
 
     public $translatable = ['name', 'description'];
+
+    /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'active' => 'boolean',
+            'type' => ProductOptionTypeEnum::class,
+        ];
+    }
 
     public function productHistory(): BelongsToMany
     {

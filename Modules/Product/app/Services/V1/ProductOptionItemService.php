@@ -8,9 +8,9 @@ use InvalidArgumentException;
 use Modules\Product\Http\Requests\V1\CreateProductOptionItemRequest;
 use Modules\Product\Http\Requests\V1\UpdateProductOptionItemRequest;
 use Modules\Product\Interfaces\V1\ReadProductOptionItemRepositoryInterface;
+use Modules\Product\Interfaces\V1\WritePriceRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductOptionItemRepositoryInterface;
 use Modules\Product\Models\ProductOptionItem;
-use Modules\Product\Transformers\V1\ProductOptionItemCollection;
 use Modules\Product\Transformers\V1\ProductOptionItemResource;
 use Modules\Shared\Enums\ServerStatusCodeEnum;
 
@@ -19,6 +19,7 @@ class ProductOptionItemService
     public function __construct(
         private readonly ReadProductOptionItemRepositoryInterface $readProductOptionItem,
         private readonly WriteProductOptionItemRepositoryInterface $writeProductOptionItem,
+        private readonly WritePriceRepositoryInterface $writePrice,
     ) {}
 
     /**
@@ -26,7 +27,7 @@ class ProductOptionItemService
      *
      * @return array<string, mixed>
      */
-    public function getitems(): array
+    public function getItems(): array
     {
         $items = $this->readProductOptionItem->getAllItems();
 
@@ -37,7 +38,37 @@ class ProductOptionItemService
         return
         [
             'data' => [
-                'product_option_item' => new ProductOptionItemCollection($current_items),
+                'product_option_item' => ProductOptionItemResource::collection($current_items),
+                'count' => count($current_items),
+            ],
+            'status_code' => ServerStatusCodeEnum::OK,
+            'status' => 'success',
+        ];
+
+    }
+
+    /**
+     * Return all the current options items
+     *
+     * @return array<string, mixed>
+     */
+    public function getItemsByOption(string $id): array
+    {
+
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
+        $items = $this->readProductOptionItem->getItemByOptionId($id);
+
+        $current_items = $items->filter(function ($option) {
+            return $option->is_current_version;
+        });
+
+        return
+        [
+            'data' => [
+                'product_option_item' => ProductOptionItemResource::collection($current_items),
                 'count' => count($current_items),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -53,6 +84,10 @@ class ProductOptionItemService
      */
     public function getItemsById(string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         return
         [
             'data' => [
@@ -70,13 +105,13 @@ class ProductOptionItemService
      */
     public function getAllItems(): array
     {
-        $options = $this->readProductOptionItem->getAllItems();
+        $items = $this->readProductOptionItem->getAllItems();
 
         return
         [
             'data' => [
-                'product_option_item' => new ProductOptionItemCollection($options),
-                'count' => count($options),
+                'product_option_item' => ProductOptionItemResource::collection($items),
+                'count' => count($items),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
@@ -88,15 +123,25 @@ class ProductOptionItemService
      *
      * @return array<string, mixed>
      */
-    public function createItemn(CreateProductOptionItemRequest $request): array
+    public function createItem(CreateProductOptionItemRequest $request): array
     {
 
-        $option = $this->writeProductOptionItem->store($request);
+        $itemRequest = $request->except(['price']);
+
+        $item = $this->writeProductOptionItem->store(new CreateProductOptionItemRequest($itemRequest));
+
+        if (! is_null($request->price)) {
+            foreach ($request->price as $price) {
+                if ($price !== null) {
+                    $this->writePrice->store((object) $price, ProductOptionItem::class, $item->id);
+                }
+            }
+        }
 
         return
         [
             'data' => [
-                'product_option_item' => new ProductOptionItemResource($option),
+                'product_option_item' => new ProductOptionItemResource($item),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
             'status' => 'success',
@@ -110,6 +155,10 @@ class ProductOptionItemService
      */
     public function updateItem(UpdateProductOptionItemRequest $request, string $id): array
     {
+
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
 
         $productOption = $this->getProductOptionItemFromId($id);
 
@@ -132,6 +181,10 @@ class ProductOptionItemService
      */
     public function deleteItem(string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         $this->writeProductOptionItem->destroy($this->getProductOptionItemFromId($id));
 
         return

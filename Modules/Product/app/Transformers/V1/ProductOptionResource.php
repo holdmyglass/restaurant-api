@@ -17,10 +17,11 @@ class ProductOptionResource extends JsonResource
             'name' => $this->getTranslations('name'),
             'description' => $this->getTranslations('description'),
             'slug' => $this->slug,
-            'mix' => $this->min,
+            'min' => $this->min,
             'max' => $this->max,
-            'isActive' => $this->is_active,
+            'active' => $this->iactive,
             'type' => $this->type,
+            'items' => ProductOptionItemResource::collection($this->items),
         ];
     }
 }

@@ -17,8 +17,12 @@ class TranslatableFieldRule implements ValidationRule
 
     public function validate(string $attribute, mixed $value, Closure $fail): void
     {
+        $filteredValue = array_filter($value, function ($val) {
+            return ! is_null($val) && trim($val) !== '';
+        });
+
         $languages = HelperService::getSupportedLanguages();
-        $languageKeys = array_keys($value);
+        $languageKeys = array_keys($filteredValue);
 
         switch ($this->mode) {
             case 'all':

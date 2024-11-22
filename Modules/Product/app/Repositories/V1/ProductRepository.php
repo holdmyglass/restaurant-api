@@ -101,7 +101,8 @@ class ProductRepository implements ReadProductRepositoryInterface, WriteProductR
             HelperService::getValueFromNullableCheck($request, $product, 'takeaway', $isUpdate),
             HelperService::getValueFromNullableCheck($request, $product, 'delivery', $isUpdate),
             HelperService::getValueFromNullableCheck($request, $product, 'eat_in', $isUpdate),
-            HelperService::getValueFromNullableCheck($request, $product, 'offer', $isUpdate)
+            HelperService::getValueFromNullableCheck($request, $product, 'offer', $isUpdate),
+            HelperService::getValueFromNullableCheck($request, $product, 'vat', $isUpdate),
         );
     }
 }

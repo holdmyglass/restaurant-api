@@ -5,13 +5,13 @@ namespace Modules\Product\DTO;
 class ProductCategoryDTO
 {
     public function __construct(
-        public ?string $parentId,
-        public array $name,
-        public array $description,
-        public ?string $image,
-        public string $slug,
-        public int $rank,
-        public ?string $type,
+        public readonly ?string $parentId,
+        public readonly array $name,
+        public readonly array $description,
+        public readonly ?string $image,
+        public readonly string $slug,
+        public readonly int $rank,
+        public readonly ?string $type,
     ) {}
 
     public function toArray(): array

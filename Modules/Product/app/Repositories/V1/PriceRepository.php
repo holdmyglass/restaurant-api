@@ -11,12 +11,33 @@ use Modules\Shared\Enums\CurrencyEnum;
 
 class PriceRepository implements ReadPriceRepositoryInterface, WritePriceRepositoryInterface
 {
-    public function store(object $priceData): Price
+    public function store(object $priceData, string $priceableType, string $priceableId): Price
     {
+        // Create the PriceDTO from the incoming data
+        $priceDto = $this->createPriceDto($priceData);
+
+        // Check if a Price already exists for the same pricable_type, currency, and price_type
+        $existingPrice = Price::where('priceable_type', $priceableType)
+            ->where('priceable_id', $priceableId)
+            ->where('currency', $priceDto->currency->value) // Assuming currency is an enum
+            ->where('price_type', $priceDto->price_type->value) // Assuming price_type is an enum
+            ->first();
+
+        // If an existing Price is found, delete it
+        if ($existingPrice) {
+            $existingPrice->delete();
+        }
+
         $priceDto = $this->createPriceDto($priceData);
 
         $price = new Price;
         $price->fill($priceDto->toArray());
+
+        // Set the polymorphic relationship fields
+        $price->priceable_type = $priceableType;
+        $price->priceable_id = $priceableId;
+
+        // Save the new Price
         $price->save();
 
         return $price;

@@ -4,6 +4,8 @@ namespace Modules\Product\Transformers\V1;
 
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
+use Modules\File\Enums\ImageSizeEnum;
+use Modules\File\Services\V1\ImageService;
 
 class ProductCategoryResource extends JsonResource
 {
@@ -12,18 +14,21 @@ class ProductCategoryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $category = $this->resource;
+        $imageService = new ImageService;
 
         return [
-            'id' => $category->id,
-            'name' => $category->name,
-            'description' => $category->description,
-            'translations' => [
-                'name' => $category->getTranslations('name'),
-                'description' => $category->getTranslations('description'),
-            ],
-            'rank' => $category->rank,
-            'image' => $category->image,
+            'id' => $this->id,
+            'name' => $this->getTranslations('name'),
+            'description' => $this->getTranslations('description'),
+            'rank' => $this->rank,
+            'image' => $this->image ? [
+                'avatar' => $imageService->getImageUrl(ImageSizeEnum::AVATAR, $this->image),
+                'small-square' => $imageService->getImageUrl(ImageSizeEnum::SMALLSQUARE, $this->image),
+                'medium-square' => $imageService->getImageUrl(ImageSizeEnum::MEDIUMSQUARE, $this->image),
+            ] : null,
+            'type' => $this->type,
+            'dishesCount' => count($this->products),
+            'products' => ProductResource::collection($this->products),
         ];
     }
 }

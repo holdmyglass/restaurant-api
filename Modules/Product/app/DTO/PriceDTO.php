@@ -16,6 +16,7 @@ class PriceDTO
         public readonly PriceTypeEnum $price_type,
         public readonly ?DateTime $valid_from = null,
         public readonly ?DateTime $valid_until = null,
+        public readonly int $rank = 1,
     ) {}
 
     public function toArray(): array
@@ -26,10 +27,11 @@ class PriceDTO
         return [
             'price' => $price,
             'currency' => $this->currency,
-            'name' => $this->name,
+            'name' => $this->name ?: strtolower(PriceTypeEnum::REGULAR->value).'_price',
             'price_type' => $this->price_type,
-            'valid_from' => $this->valid_from,
+            'valid_from' => $this->valid_from ?: now(),
             'valid_until' => $this->valid_until,
+            'rank' => $this->rank,
         ];
     }
 
@@ -37,7 +39,6 @@ class PriceDTO
     {
         return match ($currency) {
             CurrencyEnum::EUR,CurrencyEnum::USD => 100,
-            // Add more currency cases as needed
             default => throw new InvalidArgumentException('Unsupported currency'),
         };
     }

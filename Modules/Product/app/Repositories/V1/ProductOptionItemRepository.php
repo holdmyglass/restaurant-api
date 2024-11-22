@@ -81,15 +81,23 @@ class ProductOptionItemRepository implements ReadProductOptionItemRepositoryInte
         return $productOptionItem->deleteWithoutVersion();
     }
 
-    private function createProductOptionDTO(CreateProductOptionItemRequest|UpdateProductOptionItemRequest $request, ?ProductOptionItem $productOption = null): ProductOptionItemDTO
+    private function createProductOptionDTO(CreateProductOptionItemRequest|UpdateProductOptionItemRequest $request, ?ProductOptionItem $productOptionItem = null): ProductOptionItemDTO
     {
         $isUpdate = $request instanceof UpdateProductOptionItemRequest;
 
         return new ProductOptionItemDTO(
-            HelperService::getValueFromNullableCheck($request, $productOption, 'name', $isUpdate),
-            HelperService::getValueFromNullableCheck($request, $productOption, 'description', $isUpdate, []),
-            HelperService::getValueFromNullableCheck($request, $productOption, 'max', $isUpdate),
-            HelperService::getValueFromNullableCheck($request, $productOption, 'is_active', $isUpdate)
+            HelperService::getValueFromNullableCheck($request, $productOptionItem, 'name', $isUpdate),
+            HelperService::getValueFromNullableCheck($request, $productOptionItem, 'description', $isUpdate, []),
+            HelperService::Slugify(
+                HelperService::getValueFromNullableCheck($request, $productOptionItem, 'slug', $isUpdate, HelperService::getFallbackSlugAttributeFromTranslatable($request->name)),
+                'slug',
+                new ProductOption,
+                $isUpdate ? $productOptionItem->version_identifier : null
+            ), HelperService::getValueFromNullableCheck($request, $productOptionItem, 'max', $isUpdate),
+            HelperService::getValueFromNullableCheck($request, $productOptionItem, 'max', $isUpdate),
+            HelperService::getValueFromNullableCheck($request, $productOptionItem, 'available', $isUpdate),
+            HelperService::getValueFromNullableCheck($request, $productOptionItem, 'vat', $isUpdate),
+
         );
     }
 }

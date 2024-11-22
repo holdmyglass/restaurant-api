@@ -21,9 +21,11 @@ return new class extends Migration
 
             $table->uuid('id')->primary();
 
+            $table->uuidMorphs('priceable');
+
             $table->string('currency')->default(CurrencyEnum::USD);
             $table->string('name')->default(ucfirst(strtolower(PriceTypeEnum::REGULAR->value)).' Price');
-            $table->integer('price'); // multiplies by 10,000
+            $table->integer('price');
             $table->string('price_type')->default(PriceTypeEnum::REGULAR);
             $table->dateTime('valid_from')->nullable()->index();
             $table->dateTime('valid_until')->nullable()->index();

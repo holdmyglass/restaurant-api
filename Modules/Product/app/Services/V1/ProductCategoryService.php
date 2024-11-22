@@ -2,16 +2,19 @@
 
 namespace Modules\Product\Services\V1;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Modules\File\Enums\ImageSizeEnum;
+use Modules\File\Services\V1\ImageUploadService;
 use Modules\Product\DTO\ProductCategoryDTO;
 use Modules\Product\Http\Requests\V1\CreateProductCategoryRequest;
 use Modules\Product\Http\Requests\V1\UpdateProductCategoryRequest;
 use Modules\Product\Interfaces\V1\ReadProductCategoryRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductCategoryRepositoryInterface;
 use Modules\Product\Models\ProductCategory;
-use Modules\Product\Transformers\V1\ProductCategoryCollection;
+use Modules\Product\Transformers\V1\ProductCategoryBasicResource;
 use Modules\Product\Transformers\V1\ProductCategoryResource;
 use Modules\Shared\Enums\ServerStatusCodeEnum;
 use Modules\Shared\Services\V1\HelperService;
@@ -20,7 +23,8 @@ class ProductCategoryService
 {
     public function __construct(
         private readonly ReadProductCategoryRepositoryInterface $read,
-        private readonly WriteProductCategoryRepositoryInterface $write
+        private readonly WriteProductCategoryRepositoryInterface $write,
+        private readonly ImageUploadService $imageUploadService
     ) {}
 
     /**
@@ -30,16 +34,12 @@ class ProductCategoryService
      */
     public function getProductCategories(): array
     {
-        $categories = $this->read->getAllProductCategories();
-
-        $current_categories = $categories->filter(function ($category) {
-            return $category->is_current_version;
-        });
+        $current_categories = $this->getCurrentProductCategories();
 
         return
         [
             'data' => [
-                'categories' => new ProductCategoryCollection($current_categories),
+                'categories' => ProductCategoryBasicResource::collection($current_categories),
                 'count' => count($current_categories),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -59,7 +59,7 @@ class ProductCategoryService
         return
         [
             'data' => [
-                'categories' => new ProductCategoryCollection($categories),
+                'categories' => ProductCategoryResource::collection($categories),
                 'count' => count($categories),
             ],
             'status_code' => ServerStatusCodeEnum::OK,
@@ -83,19 +83,19 @@ class ProductCategoryService
             $category = $this->read->getProductCategoryById($id);
 
             if ($category->is_deleted) {
-                throw new InvalidArgumentException(__('shared::messages.error.model_not_found'));
+                throw new ModelNotFoundException(__('shared::messages.error.model_not_found'));
             }
 
             return
             [
                 'data' => [
-                    'category' => new ProductCategoryResource($category),
+                    'category' => new ProductCategoryBasicResource($category),
                 ],
                 'status_code' => ServerStatusCodeEnum::OK,
                 'status' => 'success',
             ];
         } catch (ModelNotFoundException $e) {
-            throw new InvalidArgumentException(__('shared::messages.error.model_not_found'));
+            throw new ModelNotFoundException(__('shared::messages.error.model_not_found'));
         }
 
     }
@@ -105,6 +105,10 @@ class ProductCategoryService
      */
     public function getCurrentProductCategoryById(string $id): ProductCategory
     {
+
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
 
         $productCategory = $this->read->getProductCategoryById($id);
         if ($productCategory->is_current_version) {
@@ -143,13 +147,18 @@ class ProductCategoryService
      */
     public function createProductCategory(CreateProductCategoryRequest $request): array
     {
+        $image = null;
+
+        if ($request->image) {
+            $image = $this->imageUploadService->upload($request->file('image'), [ImageSizeEnum::AVATAR, ImageSizeEnum::SMALLSQUARE, ImageSizeEnum::SMALLHORIZONTAL, ImageSizeEnum::SMALLVERTICAL,  ImageSizeEnum::MEDIUMSQUARE, ImageSizeEnum::MEDIUMHORIZONTAL, ImageSizeEnum::MEDIUMHORIZONTAL]);
+        }
 
         $poductCategoryDTO = new ProductCategoryDTO(
             parentId: $request->parentId ?? null,
             name: $request->name,
             description: $request->description ?? [],
             //TODO Need to work on this image, create Image upload method in File Module
-            image: $request->image ?? null,
+            image: $image,
             slug: HelperService::Slugify(
                 $request->slug ?? HelperService::getFallbackSlugAttributeFromTranslatable($request->name),
                 'slug',
@@ -178,12 +187,16 @@ class ProductCategoryService
      */
     public function updateProductCategory(UpdateProductCategoryRequest $request, string $id): array
     {
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
+
         $productCategory = $this->read->getProductCategoryById($id);
 
         $poductCategoryDTO = new ProductCategoryDTO(
             parentId: ($request->parent_id ?? (HelperService::isColumnNullable('product_categories', 'parent_id') ? null : $productCategory->parent_id)),
-            name: $request->name ?? $productCategory->name,
-            description: $request->description ?? $productCategory->description,
+            name: $request->name ?? $productCategory->getTranslations('name'),
+            description: $request->description ?? $productCategory->getTranslations('description'),
             //TODO:  Need to work on this image, create Image upload method in File Module
             image: ($request->image ?? (HelperService::isColumnNullable('product_categories', 'image') ? null : $productCategory->image)),
             slug: $request->slug ?? $productCategory->slug,
@@ -210,9 +223,13 @@ class ProductCategoryService
      */
     public function deleteProductCategory(string $id): array
     {
-        $productCategory = $this->getproductCategoryById($id);
+        if (! Str::isUuid($id)) {
+            throw new InvalidArgumentException(__('shared::messages.error.invalid_resource_identifier'));
+        }
 
-        $this->write->destroy($productCategory['data']['category']);
+        $productCategory = $this->read->getProductCategoryById($id);
+
+        $this->write->destroy($productCategory);
 
         return
         [
@@ -220,5 +237,16 @@ class ProductCategoryService
             'status' => 'success',
             'message' => __('shared::messages.success.deleted_successfully'),
         ];
+    }
+
+    public function getCurrentProductCategories(): Collection
+    {
+        $categories = $this->read->getAllProductCategories();
+
+        $current_categories = $categories->filter(function ($category) {
+            return $category->is_current_version;
+        });
+
+        return $current_categories;
     }
 }

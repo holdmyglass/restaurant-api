@@ -7,13 +7,13 @@ use Modules\Product\Enums\ProductOptionTypeEnum;
 class ProductOptionDTO
 {
     public function __construct(
-        public array $name,
-        public array $description,
-        public string $slug,
-        public ProductOptionTypeEnum $type,
-        public ?int $min,
-        public ?int $max,
-        public ?bool $isActive
+        public readonly array $name,
+        public readonly array $description,
+        public readonly string $slug,
+        public readonly ProductOptionTypeEnum $type,
+        public readonly ?int $min,
+        public readonly ?int $max,
+        public readonly ?bool $active,
     ) {}
 
     public function toArrayExceptTranslatable(): array
@@ -23,7 +23,7 @@ class ProductOptionDTO
             'type' => $this->type,
             'min' => $this->min,
             'max' => $this->max,
-            'is_active' => $this->isActive,
+            'active' => $this->active,
         ];
     }
 }

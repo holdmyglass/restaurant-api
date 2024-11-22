@@ -4,7 +4,6 @@ namespace Modules\Product\Providers;
 
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Modules\Product\Interfaces\V1\PricableInterface;
 use Modules\Product\Interfaces\V1\ReadPriceRepositoryInterface;
 use Modules\Product\Interfaces\V1\ReadProductCategoryRepositoryInterface;
 use Modules\Product\Interfaces\V1\ReadProductOptionItemRepositoryInterface;
@@ -15,7 +14,6 @@ use Modules\Product\Interfaces\V1\WriteProductCategoryRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductOptionItemRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductOptionRepositoryInterface;
 use Modules\Product\Interfaces\V1\WriteProductRepositoryInterface;
-use Modules\Product\Models\Product;
 use Modules\Product\Repositories\V1\PriceRepository;
 use Modules\Product\Repositories\V1\ProductCategoryRepository;
 use Modules\Product\Repositories\V1\ProductOptionItemRepository;
@@ -147,7 +145,6 @@ class ProductServiceProvider extends ServiceProvider
         $this->app->bind(WriteProductCategoryRepositoryInterface::class, ProductCategoryRepository::class);
         $this->app->bind(ReadPriceRepositoryInterface::class, PriceRepository::class);
         $this->app->bind(WritePriceRepositoryInterface::class, PriceRepository::class);
-        $this->app->bind(PricableInterface::class, Product::class);
         $this->app->bind(ReadProductOptionRepositoryInterface::class, ProductOptionRepository::class);
         $this->app->bind(WriteProductOptionRepositoryInterface::class, ProductOptionRepository::class);
         $this->app->bind(ReadProductOptionItemRepositoryInterface::class, ProductOptionItemRepository::class);

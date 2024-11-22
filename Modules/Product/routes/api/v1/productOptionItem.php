@@ -4,6 +4,11 @@ use App\Http\Middleware\Admin;
 use Illuminate\Support\Facades\Route;
 use Modules\Product\Http\Controllers\Api\V1\ProductOptionItemController;
 
+Route::prefix('v1/product/option/')->group(function () {
+    Route::get('/{id}/item', [ProductOptionItemController::class, 'byOption'])->name('product.option.item.by.option');
+
+});
+
 Route::prefix('v1/product/option/item')->group(function () {
 
     Route::get('/', [ProductOptionItemController::class, 'index'])->name('product.option.item.index');
